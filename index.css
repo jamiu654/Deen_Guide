@@ -84,7 +84,7 @@ body {
   background: var(--dark-950);
   color: #f8fafc;
   min-height: 100vh;
-  overflow: hidden;
+  overflow: auto;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -238,6 +238,96 @@ body::after {
   animation: starPulse 3s ease-in-out infinite;
 }
 
+/* Chat Widget CSS */
+#chat-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    background: #1a1a2e;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    font-family: 'Segoe UI', sans-serif;
+    overflow: hidden;
+    z-index: 1000;
+}
+
+#chat-header {
+    background: #16213e;
+    color: #e94560;
+    padding: 15px;
+    font-weight: bold;
+    text-align: center;
+}
+
+#chat-messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.message {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    line-height: 1.4;
+}
+
+.user-msg {
+    align-self: flex-end;
+    background: #e94560;
+    color: white;
+}
+
+.bot-msg {
+    align-self: flex-start;
+    background: #0f3460;
+    color: #eee;
+}
+
+#chat-input-area {
+    display: flex;
+    padding: 10px;
+    background: #16213e;
+    gap: 8px;
+}
+
+#chat-input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #0f3460;
+    color: white;
+    outline: none;
+}
+
+#chat-send {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #e94560;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#chat-send:hover {
+    background: #c73e54;
+}
+
+.typing {
+    opacity: 0.6;
+    font-style: italic;
+}
+
+
 @keyframes starPulse {
   0%, 100% { transform: scale(1) rotate(0deg); }
   50% { transform: scale(1.1) rotate(5deg); }
@@ -367,9 +457,44 @@ body::after {
 .content {
   margin-left: var(--sidebar-width);
   padding: 32px 40px;
-  height: 100vh;
+  min-height: calc(100vh - 0px);
   overflow-y: auto;
   position: relative;
+}
+
+/* Hadith modal (mobile-friendly full view) */
+.hadith-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  z-index: 400;
+}
+.hadith-modal.hidden { display: none; }
+.hadith-modal .modal-content {
+  width: 92%;
+  max-width: 720px;
+  max-height: 84%;
+  overflow: auto;
+  padding: 20px 22px;
+  border-radius: var(--radius-lg);
+  background: rgba(2,6,23,0.98);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.hadith-modal .modal-content h3 { margin-bottom: 8px; color: var(--gold-400); }
+.hadith-modal .modal-content .modal-narrator { font-size: .95rem; color: var(--emerald-300); margin-bottom: 12px; }
+.hadith-modal .modal-content .modal-body { color: #e6eef8; line-height:1.8; font-size:1rem; }
+.hadith-modal .modal-close {
+  position: absolute;
+  right: 18px;
+  top: 12px;
+  background: none;
+  border: none;
+  color: var(--gold-300);
+  font-size: 1.2rem;
+  cursor: pointer;
 }
 
 /* ─── Pages ─── */
@@ -661,6 +786,7 @@ body::after {
   min-height: 500px;
   max-height: 650px;
   overflow-y: auto;
+  scroll-behavior: smooth;
   border: 1px solid var(--glass-border);
   position: relative;
 }
@@ -702,12 +828,17 @@ body::after {
   gap: 12px;
 }
 
-.ayah:hover {
-  background: rgba(255, 255, 255, 0.02);
+.ayah:hover,
+.ayah.active {
+  background: rgba(255, 255, 255, 0.06);
   padding-left: 12px;
   padding-right: 12px;
   margin: 0 -12px;
   border-radius: var(--radius-md);
+}
+
+.ayah.active {
+  border-left: 4px solid var(--gold-400);
 }
 
 .ayah-number {

@@ -15,7 +15,9 @@ const App = {
   surahList: [],
   currentHadithPage: 1,
   currentHadithCollection: 'bukhari',
-  currentDhikr: 'subhanallah'
+  currentDhikr: 'subhanallah',
+  autoScrollFrame: null,
+  currentAyah: 0
 };
 
 const API = {
@@ -168,6 +170,8 @@ async function loadDailyHadith() {
   }
 }
 
+
+
 // ═══════════════════════════════════════════════════════
 // QURAN
 // ═══════════════════════════════════════════════════════
@@ -212,7 +216,7 @@ function populateSurahSelect() {
 
 async function loadVerses() {
   const number = document.getElementById('surahSelect')?.value;
-  const edition = document.getElementById('translationSelect')?.value || 'en';
+  const edition = document.getElementById('translationSelect')?.value || 'en.sahih';
   const reciter = document.getElementById('reciterSelect')?.value || '1';
   
   if (!number) return;
@@ -270,7 +274,7 @@ async function loadVerses() {
         <span class="ayah-count">${transData.data.numberOfAyahs} verses</span>
       </div>
       ${transData.data.ayahs.map(v => `
-        <div class="ayah">
+        <div class="ayah" data-ayah="${v.numberInSurah}">
           <span class="ayah-number">${v.numberInSurah}</span>
           ${v.text}
         </div>
@@ -283,6 +287,68 @@ async function loadVerses() {
     arabicEl.innerHTML = `<div class="error-msg">⚠ Error loading Quran: ${err.message}</div>`;
     transEl.innerHTML = `<div class="error-msg">⚠ Translation unavailable.</div>`;
   }
+}
+
+function stopAutoScroll() {
+  if (App.autoScrollFrame) {
+    cancelAnimationFrame(App.autoScrollFrame);
+    App.autoScrollFrame = null;
+  }
+}
+
+function updateScrollToggleButton() {
+  const btn = document.getElementById('toggleScrollBtn');
+  if (!btn) return;
+  btn.textContent = App.scrollEnabled ? 'Disable Auto-Scroll' : 'Enable Auto-Scroll';
+}
+
+function toggleScrollEnabled() {
+  App.scrollEnabled = !App.scrollEnabled;
+  localStorage.setItem('quranScrollEnabled', App.scrollEnabled);
+  updateScrollToggleButton();
+}
+
+function startAutoScroll() {
+  const arabicPanel = document.getElementById('arabicVerses');
+  const transPanel = document.getElementById('verses');
+  if (!arabicPanel || !transPanel || !App.audioPlayer) return;
+
+  const ayahs = arabicPanel.querySelectorAll('.ayah');
+  const ayahCount = ayahs.length;
+  if (!ayahCount) return;
+
+  function setActiveAyah(ayahNumber) {
+    if (App.currentAyah === ayahNumber) return;
+    App.currentAyah = ayahNumber;
+
+    document.querySelectorAll('#arabicVerses .ayah.active, #verses .ayah.active').forEach(el => el.classList.remove('active'));
+    const activeArabic = document.querySelector(`#arabicVerses .ayah[data-ayah="${ayahNumber}"]`);
+    const activeTrans = document.querySelector(`#verses .ayah[data-ayah="${ayahNumber}"]`);
+
+    if (activeArabic) activeArabic.classList.add('active');
+    if (activeTrans) activeTrans.classList.add('active');
+
+    if (App.scrollEnabled) {
+      if (activeArabic) activeArabic.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (activeTrans) activeTrans.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function step() {
+    if (!App.audioPlayer || App.audioPlayer.paused || !App.audioPlayer.duration) {
+      stopAutoScroll();
+      return;
+    }
+
+    const ratio = App.audioPlayer.currentTime / App.audioPlayer.duration;
+    const ayahNumber = Math.min(ayahCount, Math.max(1, Math.ceil(ratio * ayahCount)));
+    setActiveAyah(ayahNumber);
+    App.autoScrollFrame = requestAnimationFrame(step);
+  }
+
+  setActiveAyah(Math.max(1, Math.ceil((App.audioPlayer.currentTime / Math.max(1, App.audioPlayer.duration)) * ayahCount)));
+  stopAutoScroll();
+  App.autoScrollFrame = requestAnimationFrame(step);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -317,22 +383,28 @@ function setupAudio(surahNumber, reciterId) {
       App.audioPlayer.pause();
       App.audioPlaying = false;
       playBtn.textContent = '▶ Play';
+      stopAutoScroll();
     } else {
       if (!App.audioPlayer.src) App.audioPlayer.src = audioUrl;
-      App.audioPlayer.play().catch(e => {
+      App.audioPlayer.play().then(() => {
+        App.audioPlaying = true;
+        playBtn.textContent = '⏸ Pause';
+        startAutoScroll();
+      }).catch(e => {
         alert('Audio failed to play. Try a different reciter.');
       });
-      App.audioPlaying = true;
-      playBtn.textContent = '⏸ Pause';
     }
   };
 
   playBtn.onclick = toggleAudio;
 
+  App.audioPlayer.onplay = () => startAutoScroll();
+  App.audioPlayer.onpause = () => stopAutoScroll();
   App.audioPlayer.onended = () => {
     App.audioPlaying = false;
     playBtn.textContent = '▶ Play';
     if (progressEl) progressEl.style.width = '0%';
+    stopAutoScroll();
   };
 
   App.audioPlayer.ontimeupdate = () => {
@@ -557,9 +629,10 @@ async function loadHadithCollection() {
       const narrator = h.narrator || (h.reference && h.reference.collector) || '';
       const grade = Array.isArray(h.grades) && h.grades.length ? h.grades.join(', ') : (h.grade || '');
       const safeText = shortText.replace(/"/g, '&quot;').replace(/'/g, "\'");
+      const safeFull = text.replace(/"/g, '&quot;').replace(/'/g, "\'").replace(/\n/g, '\\n');
 
       return `
-        <div class="hadith-card glass" style="position:relative;">
+        <div class="hadith-card glass" style="position:relative;" data-full="${safeFull}" data-narrator="${(narrator+'').replace(/"/g,'&quot;')}">
           <button class="bookmark-mini" onclick='bookmarkHadith(${hadithId}, "${collection}", "Hadith #${hadithId}", "${safeText}")' title="Bookmark" style="position:absolute;top:12px;right:12px;background:none;box-shadow:none;">🔖</button>
           <h4>Hadith #${hadithId}</h4>
           ${narrator ? `<p style="font-size:0.85rem;color:var(--gold-400);margin-bottom:8px;"><strong>${narrator}</strong></p>` : ''}
@@ -569,6 +642,19 @@ async function loadHadithCollection() {
         </div>
       `;
     }).join('');
+
+    // Attach tap/click handlers to open hadith modal (ignore taps on bookmark button)
+    setTimeout(() => {
+      const cards = grid.querySelectorAll('.hadith-card');
+      cards.forEach(card => {
+        card.addEventListener('click', (ev) => {
+          if (ev.target.closest('.bookmark-mini')) return; // allow bookmarking
+          const full = card.getAttribute('data-full') || '';
+          const narrator = card.getAttribute('data-narrator') || '';
+          openHadithModal({ title: card.querySelector('h4')?.textContent || 'Hadith', narrator, text: full });
+        });
+      });
+    }, 30);
 
     // Show pagination
     if (pagination) pagination.classList.remove('hidden');
@@ -593,6 +679,34 @@ async function loadHadithCollection() {
       </div>
     `;
   }
+}
+
+// Hadith modal helper
+function openHadithModal({ title = 'Hadith', narrator = '', text = '' } = {}) {
+  let modal = document.getElementById('hadithModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'hadithModal';
+    modal.className = 'hadith-modal hidden';
+    modal.innerHTML = `
+      <div class="modal-content glass">
+        <button class="modal-close" aria-label="Close">✕</button>
+        <h3 class="modal-title"></h3>
+        <div class="modal-narrator"></div>
+        <div class="modal-body"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('.modal-close').addEventListener('click', () => modal.classList.add('hidden'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+  }
+  modal.classList.remove('hidden');
+  modal.querySelector('.modal-title').textContent = title;
+  modal.querySelector('.modal-narrator').textContent = narrator;
+  const bodyEl = modal.querySelector('.modal-body');
+  // decode any escaped newlines
+  bodyEl.textContent = text.replace(/\\n/g, '\n');
+  bodyEl.scrollTop = 0;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -952,6 +1066,13 @@ function initSelectors() {
     });
   }
 
+  const toggleScrollBtn = document.getElementById('toggleScrollBtn');
+  if (toggleScrollBtn) {
+    toggleScrollBtn.addEventListener('click', () => {
+      toggleScrollEnabled();
+    });
+  }
+
   if (viewBookmarksBtn) {
     viewBookmarksBtn.addEventListener('click', () => {
       const bookmarksNav = document.querySelector('[data-page="bookmarks"]');
@@ -974,6 +1095,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initChatbot();
   initHadithControls();
   initSelectors();
+  updateScrollToggleButton();
   
   loadSurahs();
   

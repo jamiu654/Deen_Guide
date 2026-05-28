@@ -85,15 +85,15 @@
           <option value="">Select a Surah...</option>
         </select>
         <select id="translationSelect">
-          <option value="en">English</option>
-          <option value="ar">Arabic</option>
-          <option value="fr">French</option>
-          <option value="es">Spanish</option>
-          <option value="ur">Urdu</option>
-          <option value="tr">Turkish</option>
-          <option value="id">Indonesian</option>
-          <option value="bn">Bengali</option>
-          <option value="transliteration">Transliteration</option>
+          <option value="en.sahih">English</option>
+          <option value="ar.muyassar">Arabic</option>
+          <option value="fr.hamidullah">French</option>
+          <option value="es.cortes">Spanish</option>
+          <option value="ur.ahmedali">Urdu</option>
+          <option value="tr.yuksel">Turkish</option>
+          <option value="id.muntakhab">Indonesian</option>
+          <option value="bn.bengali">Bengali</option>
+          <option value="en.transliteration">Transliteration</option>
         </select>
         <select id="reciterSelect">
           <option value="1">Mishary Al-Afasy</option>
@@ -112,9 +112,10 @@
         </div>
       </div>
       
-      <div style="display:flex;justify-content:center;gap:12px;margin-top:16px;">
+      <div style="display:flex;justify-content:center;gap:12px;margin-top:16px;flex-wrap:wrap;">
         <button id="bookmarkAyahBtn" class="secondary">🔖 Bookmark Current</button>
         <button id="viewBookmarksBtn" class="secondary">📚 View Bookmarks</button>
+        <button id="toggleScrollBtn" class="secondary">Disable Auto-Scroll</button>
       </div>
 
       <div class="audio-player glass">
@@ -230,6 +231,7 @@
         <button class="secondary" id="chatQuickHajj" style="padding:8px 16px;font-size:.8rem;">Hajj</button>
       </div>
     </div>
+    
   </section>
 
   <!-- BOOKMARKS -->
