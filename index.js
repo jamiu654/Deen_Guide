@@ -1121,7 +1121,7 @@ function initFeedback() {
       page_url: window.location.href
     };
 
-    emailjs.send('Service_Jamiu', 'template_ohtkutk', templateParams)
+    emailjs.send('Service_Jamiu', '_ejs-test-mail-service_', templateParams)
       .then(() => {
         if (status) status.textContent = 'Feedback sent! Thank you.';
         form.reset();
