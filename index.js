@@ -1090,6 +1090,8 @@ function initSelectors() {
 }
 
 function initFeedback() {
+  emailjs.init('nuV6PLUTKCpKMZZ');
+
   const form = document.getElementById('feedbackForm');
   const nameInput = document.getElementById('feedbackName');
   const emailInput = document.getElementById('feedbackEmail');
@@ -1102,7 +1104,7 @@ function initFeedback() {
     event.preventDefault();
 
     const name = nameInput?.value.trim() || 'Anonymous';
-    const email = emailInput?.value.trim();
+    const email = emailInput?.value.trim() || 'Not provided';
     const message = messageInput?.value.trim();
 
     if (!message) {
@@ -1110,16 +1112,24 @@ function initFeedback() {
       return;
     }
 
-    const subject = encodeURIComponent(`Deen Guide feedback from ${name}`);
-    let body = `Name: ${name}%0D%0A`;
-    if (email) body += `Email: ${email}%0D%0A`;
-    body += `%0D%0AMessage:%0D%0A${encodeURIComponent(message)}%0D%0A`;
-    body += `%0D%0AApp page: ${encodeURIComponent(window.location.href)}`;
+    if (status) status.textContent = 'Sending your feedback...';
 
-    const mailtoUrl = `mailto:akoredelekan444@gmail.com?subject=${subject}&body=${body}`;
-    window.open(mailtoUrl, '_blank');
+    const templateParams = {
+      from_name: name,
+      from_email: email,
+      message,
+      page_url: window.location.href
+    };
 
-    if (status) status.textContent = 'Opening your email app to send feedback...';
+    emailjs.send('Service_Jamiu', 'template_ohtkutk', templateParams)
+      .then(() => {
+        if (status) status.textContent = 'Feedback sent! Thank you.';
+        form.reset();
+      })
+      .catch((error) => {
+        console.error('EmailJS send error:', error);
+        if (status) status.textContent = 'Unable to send now. Please try again later.';
+      });
   });
 }
 

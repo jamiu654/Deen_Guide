@@ -275,8 +275,8 @@
             <label style="font-size:.95rem;color:var(--white-muted);">Message</label>
             <textarea id="feedbackMessage" rows="6" placeholder="Write your feedback here..."></textarea>
             <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
-              <button type="submit" class="secondary">Open Email App</button>
-              <span id="feedbackStatus" style="color:var(--white-muted);font-size:.95rem;">Your message will be prepared in email.</span>
+              <button type="submit" class="secondary">Send Feedback</button>
+              <span id="feedbackStatus" style="color:var(--white-muted);font-size:.95rem;">Your message will be sent directly.</span>
             </div>
           </form>
         </div>
@@ -295,6 +295,7 @@
   <button data-page="feedback" data-icon="✉️">Feedback</button>
 </nav>
 
+<script type="text/javascript" src="https://cdn.emailjs.com/sdk/3.2.0/email.min.js"></script>
 <script src="index.js"></script> 
 </body>
 </html>
