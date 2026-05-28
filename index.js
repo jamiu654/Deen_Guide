@@ -135,6 +135,10 @@ function initTopMenu() {
     const isOpen = topNav.classList.toggle('open');
     toggle.setAttribute('aria-expanded', String(isOpen));
   });
+
+  document.addEventListener('click', (event) => {
+    if (!topNav.contains(event.target)) closeTopMenu();
+  });
 }
 
 function initStoryReadMore() {
