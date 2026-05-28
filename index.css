@@ -712,13 +712,27 @@ body::after {
   gap: 20px;
 }
 
+.top-nav {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 12px;
+  position: sticky;
+  top: 16px;
+  z-index: 50;
+}
+
+.top-menu-toggle {
+  display: none;
+}
+
 .top-links {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   align-items: center;
-  margin: 20px 0;
-  padding: 14px;
 }
 
 .top-links button {
@@ -758,6 +772,27 @@ body::after {
 .page-intro {
   color: rgba(226, 232, 240, 0.84);
   line-height: 1.8;
+}
+
+.story-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.story-more {
+  display: none;
+  margin-top: 10px;
+}
+
+.story-card.expanded .story-more {
+  display: block;
+}
+
+.story-toggle {
+  align-self: flex-start;
+  margin-top: 16px;
+  padding: 9px 16px;
+  font-size: 0.82rem;
 }
 
 .page-intro {
@@ -1938,6 +1973,45 @@ select option {
   
   .mobile-nav {
     display: flex;
+  }
+
+  .top-nav {
+    position: sticky;
+    top: 12px;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .top-menu-toggle {
+    display: inline-flex;
+    width: auto;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+  }
+
+  .top-links {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 12px;
+    right: 12px;
+    padding: 12px;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    background: rgba(15, 23, 42, 0.98);
+    backdrop-filter: blur(18px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .top-nav.open .top-links {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .top-links button {
+    width: 100%;
+    justify-content: flex-start;
   }
   
   .dashboard-grid {

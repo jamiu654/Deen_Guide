@@ -103,6 +103,7 @@ function initNavigation() {
       if (pageId === 'hadith') initHadithPage();
       if (pageId === 'prayer' && !App.prayerTimes) loadPrayerTimes();
       if (pageId === 'bookmarks') renderBookmarks();
+      closeTopMenu();
       window.scrollTo({top: 0, behavior: 'smooth'});
     };
 
@@ -112,6 +113,38 @@ function initNavigation() {
         event.preventDefault();
         activatePage();
       }
+    });
+  });
+}
+
+function closeTopMenu() {
+  const topNav = document.querySelector('.top-nav');
+  const toggle = document.getElementById('topMenuToggle');
+
+  if (topNav) topNav.classList.remove('open');
+  if (toggle) toggle.setAttribute('aria-expanded', 'false');
+}
+
+function initTopMenu() {
+  const topNav = document.querySelector('.top-nav');
+  const toggle = document.getElementById('topMenuToggle');
+
+  if (!topNav || !toggle) return;
+
+  toggle.addEventListener('click', () => {
+    const isOpen = topNav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(isOpen));
+  });
+}
+
+function initStoryReadMore() {
+  document.querySelectorAll('.story-toggle').forEach(button => {
+    button.addEventListener('click', () => {
+      const card = button.closest('.story-card');
+      if (!card) return;
+
+      const expanded = card.classList.toggle('expanded');
+      button.textContent = expanded ? 'Show less' : 'Read more';
     });
   });
 }
@@ -1484,6 +1517,8 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 Noor app initializing...');
   
   initNavigation();
+  initTopMenu();
+  initStoryReadMore();
   initClock();
   updateDashboard();
   initTasbih();

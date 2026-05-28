@@ -19,9 +19,6 @@
     <p>Your Islamic Companion</p>
   </div>
   <button class="nav-btn active" data-page="dashboard" data-icon="🏠">Dashboard</button>
-  <button class="nav-btn" data-page="about" data-icon="i">About</button>
-  <button class="nav-btn" data-page="services" data-icon="+">Services</button>
-  <button class="nav-btn" data-page="history" data-icon="H">History</button>
   <button class="nav-btn" data-page="quran" data-icon="📖">Quran Reader</button>
   <button class="nav-btn" data-page="hadith" data-icon="📜">Hadith Collection</button>
   <button class="nav-btn" data-page="prayer" data-icon="🕌">Prayer Times</button>
@@ -29,11 +26,20 @@
   <button class="nav-btn" data-page="chat" data-icon="💬">Islamic Assistant</button>
   <button class="nav-btn" data-page="quiz" data-icon="?">Quiz Game</button>
   <button class="nav-btn" data-page="bookmarks" data-icon="🔖">Bookmarks</button>
-  <button class="nav-btn" data-page="contact" data-icon="@">Contact</button>
   <div class="sidebar-footer"><p>Made with faith & code</p></div>
 </nav>
 
 <main class="content">
+  <header class="top-nav glass">
+    <button class="top-menu-toggle secondary" id="topMenuToggle" aria-expanded="false" aria-controls="topMenuLinks">☰ Menu</button>
+    <div class="top-links" id="topMenuLinks">
+      <button class="secondary active" data-page="dashboard">Home</button>
+      <button class="secondary" data-page="about">About</button>
+      <button class="secondary" data-page="services">Services</button>
+      <button class="secondary" data-page="history">History</button>
+      <button class="secondary" data-page="contact">Contact</button>
+    </div>
+  </header>
 
   <!-- DASHBOARD -->
   <section class="page active" id="dashboard">
@@ -46,13 +52,6 @@
         <div id="clock">00:00:00</div>
         <div class="clock-date" id="gregorianDate">...</div>
       </div>
-    </div>
-    <div class="top-links glass">
-      <button class="secondary active" data-page="dashboard">Home</button>
-      <button class="secondary" data-page="about">About</button>
-      <button class="secondary" data-page="services">Services</button>
-      <button class="secondary" data-page="history">History</button>
-      <button class="secondary" data-page="contact">Contact</button>
     </div>
     <div class="dashboard-grid">
       <div class="card glass" data-icon="📖">
@@ -155,26 +154,74 @@
         <article class="story-card glass">
           <h3>Prophet Adam (AS)</h3>
           <p>Adam (AS) was the first human being and the first prophet. His story reminds us that people can make mistakes, return to Allah sincerely, and be forgiven through repentance.</p>
+          <p class="story-more">Allah honored Adam (AS) with knowledge and taught him names. His story also teaches that arrogance is dangerous, because Iblis refused Allah's command out of pride.</p>
+          <button class="secondary story-toggle" type="button">Read more</button>
         </article>
         <article class="story-card glass">
           <h3>Prophet Nuh (AS)</h3>
           <p>Nuh (AS) called his people to worship Allah for many years with patience and courage. His story teaches persistence, trust in Allah, and remaining firm even when few people listen.</p>
+          <p class="story-more">He built the ark by Allah's command while people mocked him. The believers were saved, showing that success is with obedience to Allah, not with popularity.</p>
+          <button class="secondary story-toggle" type="button">Read more</button>
         </article>
         <article class="story-card glass">
           <h3>Prophet Ibrahim (AS)</h3>
           <p>Ibrahim (AS) stood against idol worship and submitted fully to Allah. He is remembered for deep faith, sacrifice, hospitality, and complete trust in his Lord.</p>
+          <p class="story-more">He questioned false worship with wisdom and was protected by Allah when thrown into fire. His family also became connected to the building of the Kaaba and the rites of Hajj.</p>
+          <button class="secondary story-toggle" type="button">Read more</button>
+        </article>
+        <article class="story-card glass">
+          <h3>Prophet Ismail (AS)</h3>
+          <p>Ismail (AS) is remembered for obedience, patience, and trust in Allah alongside his father Ibrahim (AS).</p>
+          <p class="story-more">His story teaches surrender to Allah's command and respect between parent and child. He is also connected with Makkah, Zamzam, and the building of the Kaaba.</p>
+          <button class="secondary story-toggle" type="button">Read more</button>
+        </article>
+        <article class="story-card glass">
+          <h3>Prophet Yusuf (AS)</h3>
+          <p>Yusuf (AS) faced jealousy, separation, temptation, prison, and hardship, yet remained patient and faithful.</p>
+          <p class="story-more">Allah raised him in honor after years of difficulty. His story teaches chastity, forgiveness, good character, and trusting Allah's plan even when life feels hidden from us.</p>
+          <button class="secondary story-toggle" type="button">Read more</button>
+        </article>
+        <article class="story-card glass">
+          <h3>Prophet Ayyub (AS)</h3>
+          <p>Ayyub (AS) is remembered for patience during severe illness and loss, while continuing to rely on Allah.</p>
+          <p class="story-more">He made dua with humility, and Allah relieved his hardship. His story comforts anyone facing trials and reminds believers that patience with Allah is never wasted.</p>
+          <button class="secondary story-toggle" type="button">Read more</button>
+        </article>
+        <article class="story-card glass">
+          <h3>Prophet Yunus (AS)</h3>
+          <p>Yunus (AS) called his people to Allah and is known for his dua from the darkness inside the fish.</p>
+          <p class="story-more">His supplication, "La ilaha illa Anta, subhanaka, inni kuntu minaz-zalimin," is a powerful reminder of repentance, humility, and Allah's mercy.</p>
+          <button class="secondary story-toggle" type="button">Read more</button>
         </article>
         <article class="story-card glass">
           <h3>Prophet Musa (AS)</h3>
           <p>Musa (AS) faced Pharaoh with the message of truth and relied on Allah through hardship. His story shows bravery, leadership, and the power of Allah over oppression.</p>
+          <p class="story-more">Allah supported Musa (AS) with signs and opened a path through the sea. His story teaches courage when speaking truth and patience with difficult people.</p>
+          <button class="secondary story-toggle" type="button">Read more</button>
+        </article>
+        <article class="story-card glass">
+          <h3>Prophet Dawud (AS)</h3>
+          <p>Dawud (AS) was given wisdom, leadership, and a beautiful recitation of the Zabur.</p>
+          <p class="story-more">His story reminds us that strength should be joined with worship, justice, and humility. He was a king and a servant of Allah.</p>
+          <button class="secondary story-toggle" type="button">Read more</button>
+        </article>
+        <article class="story-card glass">
+          <h3>Prophet Sulayman (AS)</h3>
+          <p>Sulayman (AS) was given a great kingdom and special abilities by Allah, yet he recognized all blessings as gifts from his Lord.</p>
+          <p class="story-more">His story teaches gratitude, wise leadership, and using power responsibly. He asked Allah for a kingdom and remained devoted to worship.</p>
+          <button class="secondary story-toggle" type="button">Read more</button>
         </article>
         <article class="story-card glass">
           <h3>Prophet Isa (AS)</h3>
           <p>Isa (AS) was given miracles by Allah and called people to worship Allah alone. His story reminds us of mercy, humility, and devotion to the message of tawheed.</p>
+          <p class="story-more">By Allah's permission, he healed the sick and gave hope to people. Muslims honor him as a mighty messenger and believe he was not divine, but a servant and prophet of Allah.</p>
+          <button class="secondary story-toggle" type="button">Read more</button>
         </article>
         <article class="story-card glass">
           <h3>Prophet Muhammad (SAW)</h3>
           <p>Muhammad (SAW) is the final prophet, sent as a mercy to mankind. His life teaches patience, honesty, kindness, justice, worship, and excellent character.</p>
+          <p class="story-more">He transformed people through Quran, mercy, and beautiful manners. His Sunnah remains a guide for worship, family life, community, leadership, and personal character.</p>
+          <button class="secondary story-toggle" type="button">Read more</button>
         </article>
       </div>
     </div>
@@ -439,12 +486,11 @@
 
 <nav class="mobile-nav">
   <button data-page="dashboard" data-icon="🏠" class="active">Home</button>
-  <button data-page="about" data-icon="i">About</button>
-  <button data-page="services" data-icon="+">Services</button>
-  <button data-page="history" data-icon="H">History</button>
   <button data-page="quran" data-icon="📖">Quran</button>
+  <button data-page="prayer" data-icon="🕌">Prayer</button>
+  <button data-page="tasbih" data-icon="📿">Tasbih</button>
+  <button data-page="chat" data-icon="💬">Chat</button>
   <button data-page="quiz" data-icon="?">Quiz</button>
-  <button data-page="contact" data-icon="@">Contact</button>
 </nav>
 
 <script src="index.js"></script> 
