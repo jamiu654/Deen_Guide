@@ -1089,47 +1089,52 @@ function initSelectors() {
   }
 }
 
-function initFeedback() {
-  emailjs.init('nuV6PLUTKCpKMZZ');
+const FEEDBACK_FORM_ENDPOINT = 'https://formspree.io/f/yourFormId';
 
+function initFeedback() {
   const form = document.getElementById('feedbackForm');
-  const nameInput = document.getElementById('feedbackName');
-  const emailInput = document.getElementById('feedbackEmail');
-  const messageInput = document.getElementById('feedbackMessage');
   const status = document.getElementById('feedbackStatus');
 
   if (!form) return;
 
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
-    const name = nameInput?.value.trim() || 'Anonymous';
-    const email = emailInput?.value.trim() || 'Not provided';
-    const message = messageInput?.value.trim();
-
+    const message = document.getElementById('feedbackMessage')?.value.trim();
     if (!message) {
       if (status) status.textContent = 'Please type your message before sending.';
       return;
     }
 
+    if (FEEDBACK_FORM_ENDPOINT === 'https://formspree.io/f/yourFormId') {
+      if (status) status.textContent = 'Feedback endpoint not configured yet. Please add your Formspree endpoint.';
+      return;
+    }
+
     if (status) status.textContent = 'Sending your feedback...';
 
-    const templateParams = {
-      from_name: name,
-      from_email: email,
-      message,
-      page_url: window.location.href
-    };
+    const formData = new FormData(form);
+    formData.append('page_url', window.location.href);
 
-    emailjs.send('Service_Jamiu', '_ejs-test-mail-service_', templateParams)
-      .then(() => {
-        if (status) status.textContent = 'Feedback sent! Thank you.';
-        form.reset();
-      })
-      .catch((error) => {
-        console.error('EmailJS send error:', error);
-        if (status) status.textContent = 'Unable to send now. Please try again later.';
+    try {
+      const response = await fetch(FEEDBACK_FORM_ENDPOINT, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
+        }
       });
+
+      if (!response.ok) {
+        throw new Error(`Formspree returned ${response.status}`);
+      }
+
+      if (status) status.textContent = 'Feedback sent! Thank you.';
+      form.reset();
+    } catch (error) {
+      console.error('Formspree send error:', error);
+      if (status) status.textContent = 'Unable to send now. Please try again later.';
+    }
   });
 }
 

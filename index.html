@@ -267,16 +267,17 @@
         </div>
         <div style="padding:22px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;">
           <h3 style="margin-bottom:10px;color:var(--gold-300);">Send Feedback</h3>
-          <form id="feedbackForm" style="display:grid;gap:14px;">
+          <form id="feedbackForm" style="display:grid;gap:14px;" action="https://formspree.io/f/yourFormId" method="POST">
             <label style="font-size:.95rem;color:var(--white-muted);">Name (optional)</label>
-            <input id="feedbackName" type="text" placeholder="Your name" autocomplete="name" />
+            <input id="feedbackName" name="from_name" type="text" placeholder="Your name" autocomplete="name" />
             <label style="font-size:.95rem;color:var(--white-muted);">Email (optional)</label>
-            <input id="feedbackEmail" type="email" placeholder="Your email" autocomplete="email" />
+            <input id="feedbackEmail" name="email" type="email" placeholder="Your email" autocomplete="email" />
             <label style="font-size:.95rem;color:var(--white-muted);">Message</label>
-            <textarea id="feedbackMessage" rows="6" placeholder="Write your feedback here..."></textarea>
+            <textarea id="feedbackMessage" name="message" rows="6" placeholder="Write your feedback here..."></textarea>
+            <input type="hidden" name="_subject" value="Deen Guide feedback" />
             <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
               <button type="submit" class="secondary">Send Feedback</button>
-              <span id="feedbackStatus" style="color:var(--white-muted);font-size:.95rem;">Your message will be sent directly.</span>
+              <span id="feedbackStatus" style="color:var(--white-muted);font-size:.95rem;">Your message will be sent securely.</span>
             </div>
           </form>
         </div>
@@ -295,7 +296,6 @@
   <button data-page="feedback" data-icon="✉️">Feedback</button>
 </nav>
 
-<script type="text/javascript" src="https://cdn.emailjs.com/sdk/3.2.0/email.min.js"></script>
 <script src="index.js"></script> 
 </body>
 </html>
