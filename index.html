@@ -78,8 +78,9 @@
     <div class="section-box glass" style="margin-top:20px;">
       <h3 style="margin-bottom:12px;color:var(--gold-300);">Need help or want to share feedback?</h3>
       <p style="color:var(--white-muted);line-height:1.7;max-width:860px;">
-        Tap the <strong>Feedback</strong> tab in the sidebar or mobile menu. You can also contact me directly at <strong>08119919481</strong> or <strong><a href="mailto:akoredelekan444@gmail.com" style="color:var(--gold-300);text-decoration:none;">akoredelekan444@gmail.com</a></strong>.
+        Tap the <strong>Feedback</strong> tab in the sidebar or mobile menu, or use the button below to open the feedback page directly.
       </p>
+      <button id="openFeedbackBtn" class="secondary" style="margin-top:12px;">Open Feedback Page</button>
     </div>
   </section>
 
@@ -255,9 +256,10 @@
     <div class="section-box glass">
       <h2 class="section-title">✉️ Feedback & Contact</h2>
       <p style="margin-bottom:18px;color:var(--white-muted);max-width:820px;line-height:1.7;">
-        If you want to suggest improvements or report an issue, use the details below or send a message through the feedback page.
+        If you want to suggest improvements or report an issue, please use the form below. Your message will open in your email app for direct delivery to:
+        <a href="mailto:akoredelekan444@gmail.com" style="color:var(--gold-300);text-decoration:none;">akoredelekan444@gmail.com</a>.
       </p>
-      <div class="feedback-details" style="display:grid;gap:18px;">
+      <div class="feedback-details" style="display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));">
         <div style="padding:22px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;">
           <h3 style="margin-bottom:10px;color:var(--gold-300);">Contact Me Directly</h3>
           <p style="margin-bottom:6px;font-size:1rem;">Phone: <strong>08119919481</strong></p>
@@ -265,10 +267,18 @@
         </div>
         <div style="padding:22px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;">
           <h3 style="margin-bottom:10px;color:var(--gold-300);">Send Feedback</h3>
-          <p style="margin-bottom:12px;color:var(--white-muted);line-height:1.6;">
-            Use the email above to send your feedback, or visit the app page and look for the Feedback tab in the sidebar or mobile navigation.
-          </p>
-          <p style="font-size:.95rem;">This page is your direct feedback access point.</p>
+          <form id="feedbackForm" style="display:grid;gap:14px;">
+            <label style="font-size:.95rem;color:var(--white-muted);">Name (optional)</label>
+            <input id="feedbackName" type="text" placeholder="Your name" autocomplete="name" />
+            <label style="font-size:.95rem;color:var(--white-muted);">Email (optional)</label>
+            <input id="feedbackEmail" type="email" placeholder="Your email" autocomplete="email" />
+            <label style="font-size:.95rem;color:var(--white-muted);">Message</label>
+            <textarea id="feedbackMessage" rows="6" placeholder="Write your feedback here..."></textarea>
+            <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+              <button type="submit" class="secondary">Open Email App</button>
+              <span id="feedbackStatus" style="color:var(--white-muted);font-size:.95rem;">Your message will be prepared in email.</span>
+            </div>
+          </form>
         </div>
       </div>
     </div>

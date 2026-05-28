@@ -1079,6 +1079,48 @@ function initSelectors() {
       if (bookmarksNav) bookmarksNav.click();
     });
   }
+
+  const openFeedbackBtn = document.getElementById('openFeedbackBtn');
+  if (openFeedbackBtn) {
+    openFeedbackBtn.addEventListener('click', () => {
+      const feedbackNav = document.querySelector('[data-page="feedback"]');
+      if (feedbackNav) feedbackNav.click();
+    });
+  }
+}
+
+function initFeedback() {
+  const form = document.getElementById('feedbackForm');
+  const nameInput = document.getElementById('feedbackName');
+  const emailInput = document.getElementById('feedbackEmail');
+  const messageInput = document.getElementById('feedbackMessage');
+  const status = document.getElementById('feedbackStatus');
+
+  if (!form) return;
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    const name = nameInput?.value.trim() || 'Anonymous';
+    const email = emailInput?.value.trim();
+    const message = messageInput?.value.trim();
+
+    if (!message) {
+      if (status) status.textContent = 'Please type your message before sending.';
+      return;
+    }
+
+    const subject = encodeURIComponent(`Deen Guide feedback from ${name}`);
+    let body = `Name: ${name}%0D%0A`;
+    if (email) body += `Email: ${email}%0D%0A`;
+    body += `%0D%0AMessage:%0D%0A${encodeURIComponent(message)}%0D%0A`;
+    body += `%0D%0AApp page: ${encodeURIComponent(window.location.href)}`;
+
+    const mailtoUrl = `mailto:akoredelekan444@gmail.com?subject=${subject}&body=${body}`;
+    window.open(mailtoUrl, '_blank');
+
+    if (status) status.textContent = 'Opening your email app to send feedback...';
+  });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1096,6 +1138,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initHadithControls();
   initSelectors();
   updateScrollToggleButton();
+  initFeedback();
   
   loadSurahs();
   
