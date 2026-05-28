@@ -24,6 +24,7 @@
   <button class="nav-btn" data-page="prayer" data-icon="🕌">Prayer Times</button>
   <button class="nav-btn" data-page="tasbih" data-icon="📿">Digital Tasbih</button>
   <button class="nav-btn" data-page="chat" data-icon="💬">Islamic Assistant</button>
+  <button class="nav-btn" data-page="feedback" data-icon="✉️">Feedback</button>
   <button class="nav-btn" data-page="bookmarks" data-icon="🔖">Bookmarks</button>
   <div class="sidebar-footer"><p>Made with faith & code</p></div>
 </nav>
@@ -234,6 +235,33 @@
     
   </section>
 
+  <!-- FEEDBACK -->
+  <section class="page" id="feedback">
+    <div class="section-box glass">
+      <h2 class="section-title">✉️ Send Feedback</h2>
+      <p class="section-sub">Help improve Deen_Guide by sharing your thoughts, suggestions, or bug reports.</p>
+      <form id="feedbackForm" class="feedback-form">
+        <div class="field-row">
+          <label for="feedbackName">Name (optional)</label>
+          <input id="feedbackName" type="text" placeholder="Your name">
+        </div>
+        <div class="field-row">
+          <label for="feedbackEmail">Email (optional)</label>
+          <input id="feedbackEmail" type="email" placeholder="Your email">
+        </div>
+        <div class="field-row">
+          <label for="feedbackMessage">Feedback</label>
+          <textarea id="feedbackMessage" rows="6" placeholder="Write your feedback here..."></textarea>
+        </div>
+        <div class="feedback-actions">
+          <button type="submit" class="primary">Send Feedback</button>
+          <button type="button" id="feedbackClear" class="secondary">Clear</button>
+        </div>
+        <p id="feedbackNotice" class="feedback-notice">Your feedback is saved locally and appreciated.</p>
+      </form>
+    </div>
+  </section>
+
   <!-- BOOKMARKS -->
   <section class="page" id="bookmarks">
     <div class="section-box glass">
@@ -252,6 +280,7 @@
   <button data-page="prayer" data-icon="🕌">Prayer</button>
   <button data-page="tasbih" data-icon="📿">Tasbih</button>
   <button data-page="chat" data-icon="💬">Chat</button>
+  <button data-page="feedback" data-icon="✉️">Feedback</button>
 </nav>
 
 <script src="index.js"></script> 

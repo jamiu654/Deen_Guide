@@ -733,6 +733,14 @@ body::after {
   border-radius: var(--radius-full);
 }
 
+.section-sub {
+  color: rgba(226, 232, 240, 0.7);
+  font-size: 0.98rem;
+  margin-bottom: 22px;
+  max-width: 680px;
+  line-height: 1.6;
+}
+
 /* ═══════════════════════════════════════════════════════
    QURAN READER
    ═══════════════════════════════════════════════════════ */
@@ -1524,6 +1532,42 @@ input:focus, select:focus {
 
 input::placeholder {
   color: rgba(148, 163, 184, 0.5);
+}
+
+.feedback-form {
+  display: grid;
+  gap: 18px;
+}
+
+.feedback-form .field-row {
+  display: grid;
+  gap: 10px;
+}
+
+.feedback-form label {
+  color: rgba(226, 232, 240, 0.85);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.feedback-form textarea {
+  min-height: 160px;
+  resize: vertical;
+}
+
+.feedback-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.feedback-notice {
+  color: rgba(226, 232, 240, 0.8);
+  font-size: 0.95rem;
+  margin-top: 6px;
+  opacity: 0.95;
+  transition: opacity 0.25s ease;
 }
 
 select {
