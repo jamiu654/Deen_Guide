@@ -87,7 +87,7 @@ function initNavigation() {
   const pages = document.querySelectorAll('.page');
   
   navBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
+    const activatePage = () => {
       const pageId = btn.dataset.page;
       if (!pageId) return;
       
@@ -95,7 +95,7 @@ function initNavigation() {
       document.getElementById(pageId)?.classList.add('active');
       
       navBtns.forEach(n => n.classList.remove('active'));
-      btn.classList.add('active');
+      document.querySelectorAll(`[data-page="${pageId}"]`).forEach(n => n.classList.add('active'));
       
       App.currentPage = pageId;
       
@@ -103,6 +103,15 @@ function initNavigation() {
       if (pageId === 'hadith') initHadithPage();
       if (pageId === 'prayer' && !App.prayerTimes) loadPrayerTimes();
       if (pageId === 'bookmarks') renderBookmarks();
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    };
+
+    btn.addEventListener('click', activatePage);
+    btn.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        activatePage();
+      }
     });
   });
 }
@@ -1166,7 +1175,7 @@ function initSelectors() {
   const openFeedbackBtn = document.getElementById('openFeedbackBtn');
   if (openFeedbackBtn) {
     openFeedbackBtn.addEventListener('click', () => {
-      const feedbackNav = document.querySelector('[data-page="feedback"]');
+      const feedbackNav = document.querySelector('[data-page="contact"]');
       if (feedbackNav) feedbackNav.click();
     });
   }

@@ -14,11 +14,14 @@
 <div class="bg-glow-2"></div>
 
 <nav class="sidebar">
-  <div class="logo">
+  <div class="logo nav-logo active" data-page="dashboard" role="button" tabindex="0" aria-label="Open dashboard">
     <h1>Deen_Guide</h1>
     <p>Your Islamic Companion</p>
   </div>
   <button class="nav-btn active" data-page="dashboard" data-icon="🏠">Dashboard</button>
+  <button class="nav-btn" data-page="about" data-icon="i">About</button>
+  <button class="nav-btn" data-page="services" data-icon="+">Services</button>
+  <button class="nav-btn" data-page="history" data-icon="H">History</button>
   <button class="nav-btn" data-page="quran" data-icon="📖">Quran Reader</button>
   <button class="nav-btn" data-page="hadith" data-icon="📜">Hadith Collection</button>
   <button class="nav-btn" data-page="prayer" data-icon="🕌">Prayer Times</button>
@@ -26,7 +29,7 @@
   <button class="nav-btn" data-page="chat" data-icon="💬">Islamic Assistant</button>
   <button class="nav-btn" data-page="quiz" data-icon="?">Quiz Game</button>
   <button class="nav-btn" data-page="bookmarks" data-icon="🔖">Bookmarks</button>
-  <button class="nav-btn" data-page="feedback" data-icon="✉️">Feedback</button>
+  <button class="nav-btn" data-page="contact" data-icon="@">Contact</button>
   <div class="sidebar-footer"><p>Made with faith & code</p></div>
 </nav>
 
@@ -43,6 +46,13 @@
         <div id="clock">00:00:00</div>
         <div class="clock-date" id="gregorianDate">...</div>
       </div>
+    </div>
+    <div class="top-links glass">
+      <button class="secondary active" data-page="dashboard">Home</button>
+      <button class="secondary" data-page="about">About</button>
+      <button class="secondary" data-page="services">Services</button>
+      <button class="secondary" data-page="history">History</button>
+      <button class="secondary" data-page="contact">Contact</button>
     </div>
     <div class="dashboard-grid">
       <div class="card glass" data-icon="📖">
@@ -84,9 +94,89 @@
     <div class="section-box glass" style="margin-top:20px;">
       <h3 style="margin-bottom:12px;color:var(--gold-300);">Need help or want to share feedback?</h3>
       <p style="color:var(--white-muted);line-height:1.7;max-width:860px;">
-        Tap the <strong>Feedback</strong> tab in the sidebar or mobile menu, or use the button below to open the feedback page directly.
+        Tap the <strong>Contact</strong> tab in the sidebar or mobile menu, or use the button below to open the contact page directly.
       </p>
-      <button id="openFeedbackBtn" class="secondary" style="margin-top:12px;">Open Feedback Page</button>
+      <button id="openFeedbackBtn" class="secondary" style="margin-top:12px;">Open Contact Page</button>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="page" id="about">
+    <div class="section-box glass">
+      <h2 class="section-title">About Deen_Guide</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h3>What this web app does</h3>
+          <p>Deen_Guide is an Islamic companion built to make daily learning and worship easier. It brings Quran reading, hadith browsing, prayer times, dhikr counting, Islamic questions, bookmarks, and quiz learning into one simple place.</p>
+        </div>
+        <div class="info-card">
+          <h3>Our goal</h3>
+          <p>We want this to become more than a website. With your support and feedback, we would like to develop Deen_Guide into a full mobile app that is fast, helpful, and easy for Muslims to use every day.</p>
+        </div>
+        <div class="info-card">
+          <h3>Built for benefit</h3>
+          <p>The project is designed for students, families, and anyone who wants a gentle way to read, remember, revise, and grow in Islamic knowledge.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="page" id="services">
+    <div class="section-box glass">
+      <h2 class="section-title">Services</h2>
+      <div class="info-grid">
+        <div class="info-card">
+          <h3>Quran Tools</h3>
+          <p>Read Quran translations, view Arabic verses, listen to reciters, save bookmarks, and continue from your last read surah.</p>
+        </div>
+        <div class="info-card">
+          <h3>Daily Worship</h3>
+          <p>Check prayer times, use the digital tasbih, track dhikr, and keep useful Islamic reminders close at hand.</p>
+        </div>
+        <div class="info-card">
+          <h3>Learning Features</h3>
+          <p>Study hadith, ask the Islamic assistant common questions, play the quiz game, and explore prophet stories in the History page.</p>
+        </div>
+        <div class="info-card">
+          <h3>Future App Plans</h3>
+          <p>We hope to add mobile app support, offline access, better learning paths, more stories, reminders, and improved community feedback features.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="page" id="history">
+    <div class="section-box glass">
+      <h2 class="section-title">History & Stories of Prophets</h2>
+      <p class="page-intro">Short reminders from the lives of noble prophets, written for reflection and learning.</p>
+      <div class="story-grid">
+        <article class="story-card glass">
+          <h3>Prophet Adam (AS)</h3>
+          <p>Adam (AS) was the first human being and the first prophet. His story reminds us that people can make mistakes, return to Allah sincerely, and be forgiven through repentance.</p>
+        </article>
+        <article class="story-card glass">
+          <h3>Prophet Nuh (AS)</h3>
+          <p>Nuh (AS) called his people to worship Allah for many years with patience and courage. His story teaches persistence, trust in Allah, and remaining firm even when few people listen.</p>
+        </article>
+        <article class="story-card glass">
+          <h3>Prophet Ibrahim (AS)</h3>
+          <p>Ibrahim (AS) stood against idol worship and submitted fully to Allah. He is remembered for deep faith, sacrifice, hospitality, and complete trust in his Lord.</p>
+        </article>
+        <article class="story-card glass">
+          <h3>Prophet Musa (AS)</h3>
+          <p>Musa (AS) faced Pharaoh with the message of truth and relied on Allah through hardship. His story shows bravery, leadership, and the power of Allah over oppression.</p>
+        </article>
+        <article class="story-card glass">
+          <h3>Prophet Isa (AS)</h3>
+          <p>Isa (AS) was given miracles by Allah and called people to worship Allah alone. His story reminds us of mercy, humility, and devotion to the message of tawheed.</p>
+        </article>
+        <article class="story-card glass">
+          <h3>Prophet Muhammad (SAW)</h3>
+          <p>Muhammad (SAW) is the final prophet, sent as a mercy to mankind. His life teaches patience, honesty, kindness, justice, worship, and excellent character.</p>
+        </article>
+      </div>
     </div>
   </section>
 
@@ -312,9 +402,9 @@
     </div>
   </section>
 
-  <section class="page" id="feedback">
+  <section class="page" id="contact">
     <div class="section-box glass">
-      <h2 class="section-title">✉️ Feedback & Contact</h2>
+      <h2 class="section-title">Contact & Feedback</h2>
       <p style="margin-bottom:18px;color:var(--white-muted);max-width:820px;line-height:1.7;">
         If you want to suggest improvements or report an issue, please use the form below. Your message will open in your email app for direct delivery to:
         <a href="mailto:akoredelekan444@gmail.com" style="color:var(--gold-300);text-decoration:none;">akoredelekan444@gmail.com</a>.
@@ -349,12 +439,12 @@
 
 <nav class="mobile-nav">
   <button data-page="dashboard" data-icon="🏠" class="active">Home</button>
+  <button data-page="about" data-icon="i">About</button>
+  <button data-page="services" data-icon="+">Services</button>
+  <button data-page="history" data-icon="H">History</button>
   <button data-page="quran" data-icon="📖">Quran</button>
-  <button data-page="prayer" data-icon="🕌">Prayer</button>
-  <button data-page="tasbih" data-icon="📿">Tasbih</button>
-  <button data-page="chat" data-icon="💬">Chat</button>
   <button data-page="quiz" data-icon="?">Quiz</button>
-  <button data-page="feedback" data-icon="✉️">Feedback</button>
+  <button data-page="contact" data-icon="@">Contact</button>
 </nav>
 
 <script src="index.js"></script> 
