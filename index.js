@@ -17,8 +17,7 @@ const App = {
   currentHadithCollection: 'bukhari',
   currentDhikr: 'subhanallah',
   autoScrollFrame: null,
-  currentAyah: 0,
-  feedbackList: JSON.parse(localStorage.getItem('noorFeedback')) || []
+  currentAyah: 0
 };
 
 const API = {
@@ -1082,59 +1081,6 @@ function initSelectors() {
   }
 }
 
-function initFeedback() {
-  const feedbackForm = document.getElementById('feedbackForm');
-  const feedbackName = document.getElementById('feedbackName');
-  const feedbackEmail = document.getElementById('feedbackEmail');
-  const feedbackMessage = document.getElementById('feedbackMessage');
-  const feedbackNotice = document.getElementById('feedbackNotice');
-  const clearBtn = document.getElementById('feedbackClear');
-
-  const updateNotice = (text) => {
-    if (feedbackNotice) {
-      feedbackNotice.textContent = text;
-      feedbackNotice.style.opacity = '1';
-    }
-  };
-
-  if (feedbackForm) {
-    feedbackForm.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const message = feedbackMessage?.value.trim();
-      if (!message) {
-        updateNotice('Please enter your feedback before sending.');
-        return;
-      }
-
-      App.feedbackList.push({
-        id: Date.now(),
-        name: feedbackName?.value.trim() || 'Anonymous',
-        email: feedbackEmail?.value.trim() || 'Not provided',
-        message,
-        date: new Date().toLocaleString()
-      });
-      localStorage.setItem('noorFeedback', JSON.stringify(App.feedbackList));
-      if (feedbackMessage) feedbackMessage.value = '';
-      if (feedbackName) feedbackName.value = '';
-      if (feedbackEmail) feedbackEmail.value = '';
-      updateNotice('Thank you! Your feedback has been saved locally.');
-    });
-  }
-
-  if (clearBtn) {
-    clearBtn.addEventListener('click', () => {
-      if (feedbackName) feedbackName.value = '';
-      if (feedbackEmail) feedbackEmail.value = '';
-      if (feedbackMessage) feedbackMessage.value = '';
-      updateNotice('Feedback form cleared.');
-    });
-  }
-
-  if (App.feedbackList.length > 0) {
-    updateNotice(`You have submitted ${App.feedbackList.length} feedback message(s).`);
-  }
-}
-
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
@@ -1149,7 +1095,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initChatbot();
   initHadithControls();
   initSelectors();
-  initFeedback();
   updateScrollToggleButton();
   
   loadSurahs();
