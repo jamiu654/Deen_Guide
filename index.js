@@ -1517,6 +1517,56 @@ function initFeedback() {
 // INIT
 // ═══════════════════════════════════════════════════════
 
+let deferredPrompt = null;
+
+function initPWAInstall() {
+  const installBtn = document.getElementById('installBtn');
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+
+    if (!installBtn) return;
+    installBtn.hidden = false;
+    installBtn.disabled = false;
+
+    installBtn.addEventListener('click', async () => {
+      installBtn.disabled = true;
+      if (!deferredPrompt) return;
+
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        console.log('PWA install accepted');
+      } else {
+        console.log('PWA install dismissed');
+      }
+
+      deferredPrompt = null;
+      installBtn.hidden = true;
+    }, { once: true });
+  });
+
+  window.addEventListener('appinstalled', () => {
+    console.log('PWA installed');
+    if (installBtn) installBtn.hidden = true;
+  });
+}
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((registration) => {
+        console.log('Service worker registered:', registration.scope);
+      })
+      .catch((error) => {
+        console.warn('Service worker registration failed:', error);
+      });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 Noor app initializing...');
   
@@ -1532,6 +1582,8 @@ document.addEventListener('DOMContentLoaded', () => {
   updateScrollToggleButton();
   initQuiz();
   initFeedback();
+  initPWAInstall();
+  registerServiceWorker();
   
   loadSurahs();
   // Also load prayer times on startup so dashboard shows Next Prayer

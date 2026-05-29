@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Deen_Guide icon</title>
+  <desc id="desc">A gold crescent and open book on a deep green background.</desc>
+  <defs>
+    <linearGradient id="bg" x1="92" y1="40" x2="420" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#153b2a"/>
+      <stop offset="1" stop-color="#07130d"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="132" y1="116" x2="398" y2="404" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f9e6a1"/>
+      <stop offset=".5" stop-color="#d4af37"/>
+      <stop offset="1" stop-color="#9f7d1f"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="178" fill="none" stroke="rgba(249,230,161,.16)" stroke-width="18"/>
+  <path d="M318 118c-49 18-84 65-84 120 0 74 60 134 134 134 16 0 31-3 45-8-28 48-80 80-140 80-90 0-163-73-163-163 0-83 62-152 142-162 21-3 44-3 66-1Z" fill="url(#gold)"/>
+  <path d="M163 305c37-22 72-23 105-5 33-18 68-17 105 5v79c-37-19-72-18-105 5-33-23-68-24-105-5v-79Z" fill="#f9e6a1"/>
+  <path d="M268 300v89" stroke="#876815" stroke-width="10" stroke-linecap="round"/>
+  <path d="M184 329c23-9 44-8 64 2M288 331c20-10 41-11 64-2M184 357c23-8 44-7 64 3M288 360c20-10 41-11 64-3" stroke="#876815" stroke-width="10" stroke-linecap="round"/>
+</svg>
