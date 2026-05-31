@@ -34,16 +34,9 @@
   <button class="nav-btn" data-page="hadith" data-icon="📜">Hadith Collection</button>
   <button class="nav-btn" data-page="prayer" data-icon="🕌">Prayer Times</button>
   <button class="nav-btn" data-page="tasbih" data-icon="📿">Digital Tasbih</button>
-  <button class="nav-btn" data-page="chat" data-icon="💬">Islamic Assistant</button>
-  <button class="nav-btn" data-page="quiz" data-icon="?">Quiz Game</button>
-  <button class="nav-btn" data-page="bookmarks" data-icon="🔖">Bookmarks</button>
-  <div class="sidebar-footer"><p>Made with faith & code</p></div>
-</nav>
-
-<main class="content">
-  <header class="top-nav glass">
-    <button class="top-menu-toggle secondary" id="topMenuToggle" aria-expanded="false" aria-controls="topMenuLinks">☰ Menu</button>
-    <button class="secondary install-button" id="installBtn" hidden>Install App</button>
+<div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
     <div class="top-links" id="topMenuLinks">
       <button class="secondary active" data-page="dashboard">Home</button>
       <button class="secondary" data-page="about">About</button>
@@ -301,11 +294,16 @@
       
       <div class="reader-controls" style="margin-bottom:20px;">
         <select id="hadithCollectionSelect">
-          <option value="bukhari">Sahih al-Bukhari (7,563)</option>
-          <option value="muslim">Sahih Muslim (3,032)</option>
-          <option value="abudawud">Sunan Abu Dawud (3,998)</option>
-          <option value="ibnmajah">Sunan Ibn Majah (4,342)</option>
-          <option value="tirmidhi">Jami at-Tirmidhi (3,956)</option>
+          <option value="eng-bukhari">Sahih al-Bukhari (English)</option>
+          <option value="ara-bukhari">Sahih al-Bukhari (Arabic)</option>
+          <option value="eng-muslim">Sahih Muslim (English)</option>
+          <option value="ara-muslim">Sahih Muslim (Arabic)</option>
+          <option value="eng-abudawud">Sunan Abu Dawud (English)</option>
+          <option value="ara-abudawud">Sunan Abu Dawud (Arabic)</option>
+          <option value="eng-ibnmajah">Sunan Ibn Majah (English)</option>
+          <option value="ara-ibnmajah">Sunan Ibn Majah (Arabic)</option>
+          <option value="eng-tirmidhi">Jami at-Tirmidhi (English)</option>
+          <option value="ara-tirmidhi">Jami at-Tirmidhi (Arabic)</option>
         </select>
         <button id="loadHadithBtn">Load Hadiths</button>
       </div>
@@ -426,6 +424,9 @@
           <option value="hard">Hard</option>
         </select>
         <button id="startQuizBtn">Start Quiz</button>
+        <label class="sound-toggle" for="soundEffectsToggle">
+          <input type="checkbox" id="soundEffectsToggle" checked /> Sound effects
+        </label>
       </div>
 
       <div class="quiz-panel glass">
@@ -491,9 +492,73 @@
           </form>
         </div>
       </div>
+
+      <div class="review-panel glass" style="margin-top:20px;padding:22px;">
+        <div class="review-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+          <div>
+            <h3 style="margin-bottom:10px;color:var(--gold-300);">Rate & Comment</h3>
+            <p style="margin:0;color:var(--white-muted);max-width:820px;line-height:1.7;">Share a rating and a short comment to help improve Deen_Guide. Reviews below include shared community feedback plus your saved reviews.</p>
+          </div>
+          <div class="review-summary" id="reviewStats">No ratings yet. Be the first to submit feedback.</div>
+        </div>
+
+        <form id="reviewForm" class="review-form" style="display:grid;gap:16px;margin-top:18px;">
+          <label style="font-size:.95rem;color:var(--white-muted);">Your rating</label>
+          <div class="rating-stars" id="ratingStars" role="radiogroup" aria-label="Rate the app">
+            <button type="button" data-value="1" aria-label="1 star">★</button>
+            <button type="button" data-value="2" aria-label="2 stars">★</button>
+            <button type="button" data-value="3" aria-label="3 stars">★</button>
+            <button type="button" data-value="4" aria-label="4 stars">★</button>
+            <button type="button" data-value="5" aria-label="5 stars">★</button>
+          </div>
+          <label style="font-size:.95rem;color:var(--white-muted);">Comment</label>
+          <textarea id="reviewComment" rows="4" placeholder="Share what you liked or what could be improved..." style="border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#f8fafc;padding:14px;min-height:110px;resize:vertical;"></textarea>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+            <button type="submit" class="secondary">Submit Review</button>
+            <button id="clearReviewsBtn" type="button" class="danger">Clear Reviews</button>
+            <span id="reviewInfo" style="color:var(--white-muted);font-size:.95rem;">Your reviews stay in this browser.</span>
+          </div>
+        </form>
+
+        <div id="reviewList" class="review-list" style="display:grid;gap:14px;margin-top:18px;"></div>
+      </div>
     </div>
   </section>
-
+  <section class="page" id="settings">
+    <div class="section-box glass">
+      <h2 class="section-title">⚙️ Settings</h2>
+      <div class="settings-grid" style="display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-top:18px;">
+        <div class="settings-card glass">
+          <h3>Theme</h3>
+          <p style="color:var(--white-muted);line-height:1.7;">Enable hard dark mode for a stronger dark interface with sharper contrast.</p>
+          <label class="toggle-switch">
+            <input type="checkbox" id="hardDarkToggle" />
+            <span>Hard Dark Mode</span>
+          </label>
+        </div>
+        <div class="settings-card glass">
+          <h3>Sound</h3>
+          <p style="color:var(--white-muted);line-height:1.7;">Turn quiz and interaction sounds on or off.</p>
+          <label class="toggle-switch">
+            <input type="checkbox" id="settingsSoundToggle" />
+            <span>Sound Effects</span>
+          </label>
+        </div>
+        <div class="settings-card glass">
+          <h3>Hadith language</h3>
+          <p style="color:var(--white-muted);line-height:1.7;">Choose Arabic or English hadith collections by default.</p>
+          <select id="settingsHadithLanguage">
+            <option value="eng">English hadith</option>
+            <option value="ara">Arabic hadith</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:20px;padding:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:18px;">
+        <h3 style="color:var(--gold-300);margin-bottom:10px;">Community Reviews</h3>
+        <p style="color:var(--white-muted);line-height:1.7;">This app loads shared community reviews from a public file so everyone can see common ratings and comments.</p>
+      </div>
+    </div>
+  </section>
 </main>
 
 <nav class="mobile-nav">
@@ -503,8 +568,12 @@
   <button data-page="tasbih" data-icon="📿">Tasbih</button>
   <button data-page="chat" data-icon="💬">Chat</button>
   <button data-page="quiz" data-icon="?">Quiz</button>
+  <button data-page="settings" data-icon="⚙️">Settings</button>
 </nav>
 
 <script src="index.js"></script> 
+</body>
+<div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+</html>
 </body>
 </html>

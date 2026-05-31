@@ -23,7 +23,12 @@ const App = {
   quizIndex: 0,
   quizScore: 0,
   quizStreak: 0,
-  quizAnswered: false
+  quizAnswered: false,
+  soundEnabled: JSON.parse(localStorage.getItem('deenSoundEnabled')) ?? true,
+  reviews: JSON.parse(localStorage.getItem('deenReviews')) || [],
+  publicReviews: [],
+  hardDarkMode: JSON.parse(localStorage.getItem('deenHardDark')) || false,
+  hadithLanguage: localStorage.getItem('deenHadithLanguage') || 'eng'
 };
 App.scrollEnabled = JSON.parse(localStorage.getItem('quranScrollEnabled')) || false;
 
@@ -32,6 +37,48 @@ const API = {
   // NEW: fawazahmed0/hadith-api via jsdelivr (CORS-FREE, no auth needed)
   hadith: 'https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions',
   prayer: 'https://api.aladhan.com/v1'
+};
+
+const Sound = {
+  context: null,
+  gainNode: null,
+  init() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    if (!this.context) {
+      this.context = new AudioContext();
+      this.gainNode = this.context.createGain();
+      this.gainNode.gain.value = 0.18;
+      this.gainNode.connect(this.context.destination);
+    }
+  },
+  playTone(frequency = 440, duration = 0.12, type = 'sine') {
+    if (!App.soundEnabled || !this.context) return;
+    if (this.context.state === 'suspended') {
+      this.context.resume().catch(() => {});
+    }
+    const oscillator = this.context.createOscillator();
+    oscillator.type = type;
+    oscillator.frequency.value = frequency;
+    oscillator.connect(this.gainNode);
+    oscillator.start();
+    oscillator.stop(this.context.currentTime + duration);
+  },
+  playClick() {
+    this.playTone(520, 0.05, 'sine');
+  },
+  playConfirm() {
+    this.playTone(720, 0.1, 'triangle');
+  },
+  playCorrect() {
+    this.playTone(860, 0.14, 'triangle');
+  },
+  playIncorrect() {
+    this.playTone(220, 0.12, 'square');
+  },
+  playNotification() {
+    this.playTone(640, 0.11, 'sine');
+  }
 };
 
 const RECITERS = {
@@ -43,12 +90,18 @@ const RECITERS = {
 
 // fawazahmed0 API collections (English editions)
 const HADITH_COLLECTIONS = {
-  'eng-bukhari': { name: 'Sahih al-Bukhari', file: 'eng-bukhari' },
-  'eng-muslim': { name: 'Sahih Muslim', file: 'eng-muslim' },
-  'eng-abudawud': { name: 'Sunan Abu Dawud', file: 'eng-abudawud' },
-  'eng-ibnmajah': { name: 'Sunan Ibn Majah', file: 'eng-ibnmajah' },
-  'eng-tirmidhi': { name: 'Jami at-Tirmidhi', file: 'eng-tirmidhi' },
-  'eng-nasai': { name: 'Sunan an-Nasai', file: 'eng-nasai' }
+  'eng-bukhari': { name: 'Sahih al-Bukhari (English)', file: 'eng-bukhari' },
+  'ara-bukhari': { name: 'Sahih al-Bukhari (Arabic)', file: 'ara-bukhari' },
+  'eng-muslim': { name: 'Sahih Muslim (English)', file: 'eng-muslim' },
+  'ara-muslim': { name: 'Sahih Muslim (Arabic)', file: 'ara-muslim' },
+  'eng-abudawud': { name: 'Sunan Abu Dawud (English)', file: 'eng-abudawud' },
+  'ara-abudawud': { name: 'Sunan Abu Dawud (Arabic)', file: 'ara-abudawud' },
+  'eng-ibnmajah': { name: 'Sunan Ibn Majah (English)', file: 'eng-ibnmajah' },
+  'ara-ibnmajah': { name: 'Sunan Ibn Majah (Arabic)', file: 'ara-ibnmajah' },
+  'eng-tirmidhi': { name: 'Jami at-Tirmidhi (English)', file: 'eng-tirmidhi' },
+  'ara-tirmidhi': { name: 'Jami at-Tirmidhi (Arabic)', file: 'ara-tirmidhi' },
+  'eng-nasai': { name: 'Sunan an-Nasai (English)', file: 'eng-nasai' },
+  'ara-nasai': { name: 'Sunan an-Nasai (Arabic)', file: 'ara-nasai' }
 };
 
 const FALLBACK_SURAHS = [
@@ -75,7 +128,109 @@ const QUIZ_BANK = [
   {category: 'history', difficulty: 'easy', question: 'In which city is the Kaaba located?', options: ['Madinah', 'Makkah', 'Jerusalem', 'Taif'], answer: 1, explanation: 'The Kaaba is in Makkah, in Masjid al-Haram.'},
   {category: 'history', difficulty: 'medium', question: 'What is the Hijrah?', options: ['The migration from Makkah to Madinah', 'The first revelation', 'The farewell sermon', 'The night prayer'], answer: 0, explanation: 'The Hijrah was the migration of the Prophet Muhammad, peace be upon him, and the early Muslims to Madinah.'},
   {category: 'history', difficulty: 'medium', question: 'Who was the first caliph after the Prophet Muhammad, peace be upon him?', options: ['Umar ibn al-Khattab', 'Ali ibn Abi Talib', 'Abu Bakr as-Siddiq', 'Uthman ibn Affan'], answer: 2, explanation: 'Abu Bakr as-Siddiq was the first caliph.'},
-  {category: 'history', difficulty: 'hard', question: 'What was the cave where the first revelation came to the Prophet Muhammad, peace be upon him?', options: ['Cave Thawr', 'Cave Hira', 'Cave Uhud', 'Cave Safa'], answer: 1, explanation: 'The first revelation came in Cave Hira.'}
+ {category: 'pillars', difficulty: 'easy', question: 'Which pillar requires Muslims to give charity to those in need?', options: ['Salah', 'Zakah', 'Hajj', 'Sawm'], answer: 1, explanation: 'Zakah is the obligatory charity given by eligible Muslims.'},
+
+{category: 'pillars', difficulty: 'medium', question: 'Where do Muslims perform Hajj?', options: ['Madinah', 'Jerusalem', 'Makkah', 'Taif'], answer: 2, explanation: 'Hajj is the pilgrimage to Makkah.'},
+
+{category: 'pillars', difficulty: 'hard', question: 'Which pillar of Islam is required only once in a lifetime for those who are able?', options: ['Salah', 'Sawm', 'Zakah', 'Hajj'], answer: 3, explanation: 'Hajj is obligatory once in a lifetime for Muslims who are physically and financially able.'},
+
+{category: 'quran', difficulty: 'easy', question: 'How many surahs are in the Quran?', options: ['100', '114', '120', '99'], answer: 1, explanation: 'The Quran contains 114 surahs.'},
+
+{category: 'quran', difficulty: 'medium', question: 'Which surah is recited for protection and begins with "Qul a\'udhu bi rabbil-falaq"?', options: ['Al-Falaq', 'Al-Ikhlas', 'An-Nas', 'Al-Kafirun'], answer: 0, explanation: 'Surah Al-Falaq is one of the two surahs commonly recited for protection.'},
+
+{category: 'quran', difficulty: 'hard', question: 'In which month was the Quran first revealed?', options: ['Muharram', 'Rajab', 'Ramadan', 'Shawwal'], answer: 2, explanation: 'The Quran was first revealed during the month of Ramadan.'},
+
+{category: 'prayer', difficulty: 'easy', question: 'Which prayer is performed just after sunset?', options: ['Asr', 'Fajr', 'Maghrib', 'Isha'], answer: 2, explanation: 'Maghrib begins immediately after sunset.'},
+
+{category: 'prayer', difficulty: 'easy', question: 'How many rakahs are obligatory in Fajr prayer?', options: ['2', '3', '4', '5'], answer: 0, explanation: 'Fajr consists of two obligatory rakahs.'},
+
+{category: 'prayer', difficulty: 'medium', question: 'Which direction do Muslims face during prayer?', options: ['East', 'West', 'The Kaaba', 'Madinah'], answer: 2, explanation: 'Muslims face the Kaaba in Makkah during prayer.'},
+
+{category: 'prayer', difficulty: 'hard', question: 'What is the Arabic term for the call to prayer?', options: ['Iqamah', 'Adhan', 'Khutbah', 'Takbir'], answer: 1, explanation: 'The Adhan is the call that announces the prayer time.'},
+
+{category: 'history', difficulty: 'easy', question: 'Who was the mother of Prophet Isa (Jesus), peace be upon him?', options: ['Aisha', 'Khadijah', 'Maryam', 'Asiyah'], answer: 2, explanation: 'Maryam (Mary) was the mother of Prophet Isa.'},
+
+{category: 'history', difficulty: 'easy', question: 'Which city did the Prophet Muhammad, peace be upon him, migrate to during the Hijrah?', options: ['Taif', 'Jerusalem', 'Madinah', 'Makkah'], answer: 2, explanation: 'The Prophet migrated from Makkah to Madinah.'},
+
+{category: 'history', difficulty: 'medium', question: 'Who was known as the "Sword of Allah"?', options: ['Ali ibn Abi Talib', 'Khalid ibn al-Walid', 'Abu Bakr', 'Bilal ibn Rabah'], answer: 1, explanation: 'Khalid ibn al-Walid was given the title "Sword of Allah".'},
+
+{category: 'history', difficulty: 'medium', question: 'Who was the first person to accept Islam among men?', options: ['Umar ibn al-Khattab', 'Ali ibn Abi Talib', 'Abu Bakr as-Siddiq', 'Uthman ibn Affan'], answer: 2, explanation: 'Abu Bakr as-Siddiq was the first adult male to accept Islam.'},
+
+{category: 'history', difficulty: 'hard', question: 'Which battle is known as the first major battle in Islam?', options: ['Battle of Uhud', 'Battle of Badr', 'Battle of Khandaq', 'Battle of Hunayn'], answer: 1, explanation: 'The Battle of Badr was the first major battle fought by the Muslims.'},
+
+{category: 'prophets', difficulty: 'easy', question: 'Which prophet built the Ark by Allah’s command?', options: ['Ibrahim', 'Musa', 'Nuh', 'Yusuf'], answer: 2, explanation: 'Prophet Nuh (Noah) built the Ark.'},
+
+{category: 'prophets', difficulty: 'easy', question: 'Which prophet was swallowed by a large fish?', options: ['Yunus', 'Dawud', 'Sulaiman', 'Zakariyya'], answer: 0, explanation: 'Prophet Yunus was swallowed by a large fish and later saved by Allah.'},
+
+{category: 'prophets', difficulty: 'medium', question: 'Which prophet spoke to Allah on Mount Sinai?', options: ['Isa', 'Ibrahim', 'Musa', 'Nuh'], answer: 2, explanation: 'Prophet Musa spoke to Allah and received revelation.'},
+
+{category: 'prophets', difficulty: 'medium', question: 'Which prophet was known for interpreting dreams?', options: ['Yusuf', 'Lut', 'Harun', 'Ayub'], answer: 0, explanation: 'Prophet Yusuf was gifted with the interpretation of dreams.'},
+
+{category: 'prophets', difficulty: 'hard', question: 'Which prophet was thrown into a fire by his people but was protected by Allah?', options: ['Ibrahim', 'Musa', 'Isa', 'Nuh'], answer: 0, explanation: 'Prophet Ibrahim was thrown into a fire, but Allah made it cool and safe for him.'},
+
+{category: 'ramadan', difficulty: 'easy', question: 'What meal is eaten before the fast begins?', options: ['Iftar', 'Suhoor', 'Walimah', 'Aqiqah'], answer: 1, explanation: 'Suhoor is the pre-dawn meal before fasting begins.'},
+
+{category: 'ramadan', difficulty: 'easy', question: 'What meal breaks the fast at sunset?', options: ['Suhoor', 'Nikah', 'Iftar', 'Aqiqah'], answer: 2, explanation: 'Iftar is the meal used to break the fast at sunset.'},
+
+{category: 'ramadan', difficulty: 'medium', question: 'In which month do Muslims fast?', options: ['Muharram', 'Ramadan', 'Shawwal', 'Rajab'], answer: 1, explanation: 'Muslims fast during the month of Ramadan.'},
+
+{category: 'ramadan', difficulty: 'hard', question: 'What is the special night known as the Night of Decree?', options: ['Laylatul Qadr', 'Laylatul Mi\'raj', 'Yawm al-Arafah', 'Ashura'], answer: 0, explanation: 'Laylatul Qadr is a blessed night mentioned in the Quran.'}
+  ,{category: 'history', difficulty: 'hard', question: 'What was the cave where the first revelation came to the Prophet Muhammad, peace be upon him?', options: ['Cave Thawr', 'Cave Hira', 'Cave Uhud', 'Cave Safa'], answer: 1, explanation: 'The first revelation came in Cave Hira.'},
+  {category: 'prophets', difficulty: 'easy', question: 'Which prophet was sold into slavery before becoming a leader in Egypt?', options: ['Musa', 'Yusuf', 'Ibrahim', 'Yunus'], answer: 1, explanation: 'Prophet Yusuf was sold into slavery and later became a trusted leader in Egypt.'},
+
+{category: 'prophets', difficulty: 'easy', question: 'Which prophet built the Kaaba with his son Ismail?', options: ['Nuh', 'Ibrahim', 'Dawud', 'Sulaiman'], answer: 1, explanation: 'Prophet Ibrahim and his son Ismail rebuilt the Kaaba by Allah’s command.'},
+
+{category: 'prophets', difficulty: 'medium', question: 'Which prophet received the Zabur?', options: ['Musa', 'Isa', 'Dawud', 'Ibrahim'], answer: 2, explanation: 'The Zabur (Psalms) was revealed to Prophet Dawud.'},
+
+{category: 'prophets', difficulty: 'medium', question: 'Which prophet could understand the speech of animals?', options: ['Yusuf', 'Sulaiman', 'Yunus', 'Harun'], answer: 1, explanation: 'Allah gave Prophet Sulaiman the ability to understand animals and birds.'},
+
+{category: 'prophets', difficulty: 'hard', question: 'Which prophet is known for his patience during severe trials and illness?', options: ['Ayub', 'Lut', 'Zakariyya', 'Idris'], answer: 0, explanation: 'Prophet Ayub is famous for his patience and trust in Allah during hardship.'},
+
+{category: 'quran', difficulty: 'easy', question: 'Which surah is recited in every rakah of prayer?', options: ['Al-Fatiha', 'Al-Ikhlas', 'Al-Mulk', 'Ya-Sin'], answer: 0, explanation: 'Surah Al-Fatiha is recited in every rakah of salah.'},
+
+{category: 'quran', difficulty: 'easy', question: 'How many juz are there in the Quran?', options: ['20', '25', '30', '40'], answer: 2, explanation: 'The Quran is divided into 30 juz.'},
+
+{category: 'quran', difficulty: 'medium', question: 'Which surah is often called the greatest surah in the Quran?', options: ['Al-Fatiha', 'Al-Baqarah', 'Ya-Sin', 'Al-Mulk'], answer: 0, explanation: 'Surah Al-Fatiha is described in authentic hadith as the greatest surah.'},
+
+{category: 'quran', difficulty: 'medium', question: 'Which surah is recommended to be recited on Fridays?', options: ['Al-Kahf', 'Maryam', 'Al-Waqiah', 'Al-Mulk'], answer: 0, explanation: 'Many Muslims recite Surah Al-Kahf on Fridays.'},
+
+{category: 'quran', difficulty: 'hard', question: 'What is the name of the verse known as the Throne Verse?', options: ['Ayat al-Nur', 'Ayat al-Kursi', 'Ayat al-Sabr', 'Ayat al-Rahmah'], answer: 1, explanation: 'Ayat al-Kursi is verse 255 of Surah Al-Baqarah.'},
+
+{category: 'prayer', difficulty: 'easy', question: 'Which prayer comes after Dhuhr?', options: ['Maghrib', 'Isha', 'Asr', 'Fajr'], answer: 2, explanation: 'Asr is the prayer that follows Dhuhr.'},
+
+{category: 'prayer', difficulty: 'easy', question: 'How many obligatory rakahs are in Maghrib prayer?', options: ['2', '3', '4', '5'], answer: 1, explanation: 'Maghrib consists of three obligatory rakahs.'},
+
+{category: 'prayer', difficulty: 'medium', question: 'What is the name of the prayer performed on Friday at noon?', options: ['Tahajjud', 'Jumuah', 'Eid', 'Tarawih'], answer: 1, explanation: 'Jumuah prayer replaces Dhuhr on Friday for eligible Muslims.'},
+
+{category: 'prayer', difficulty: 'medium', question: 'What do Muslims say when beginning prayer?', options: ['SubhanAllah', 'Allahu Akbar', 'Alhamdulillah', 'Astaghfirullah'], answer: 1, explanation: 'Prayer begins with the opening takbir: Allahu Akbar.'},
+
+{category: 'prayer', difficulty: 'hard', question: 'What is the name of the voluntary night prayer during Ramadan?', options: ['Tahajjud', 'Duha', 'Tarawih', 'Istikhara'], answer: 2, explanation: 'Tarawih is the special nightly prayer prayed during Ramadan.'},
+
+{category: 'history', difficulty: 'easy', question: 'Who was the first wife of Prophet Muhammad, peace be upon him?', options: ['Aisha', 'Hafsah', 'Khadijah', 'Zaynab'], answer: 2, explanation: 'Khadijah was the first wife of the Prophet and the first believer.'},
+
+{category: 'history', difficulty: 'easy', question: 'Who was the first muezzin in Islam?', options: ['Bilal ibn Rabah', 'Abu Bakr', 'Umar ibn al-Khattab', 'Ali ibn Abi Talib'], answer: 0, explanation: 'Bilal ibn Rabah was chosen to call the Adhan.'},
+
+{category: 'history', difficulty: 'medium', question: 'Which caliph compiled the Quran into a single book after many memorizers died?', options: ['Ali', 'Uthman', 'Abu Bakr', 'Umar'], answer: 2, explanation: 'Abu Bakr ordered the collection of the Quran into a compiled manuscript.'},
+
+{category: 'history', difficulty: 'medium', question: 'What was the name of the Prophet’s mosque in Madinah?', options: ['Masjid al-Haram', 'Masjid Quba', 'Al-Masjid an-Nabawi', 'Masjid al-Aqsa'], answer: 2, explanation: 'Al-Masjid an-Nabawi is the Prophet’s Mosque in Madinah.'},
+
+{category: 'history', difficulty: 'hard', question: 'Which treaty was signed between the Muslims and Quraysh in 6 AH?', options: ['Treaty of Badr', 'Treaty of Hudaybiyyah', 'Treaty of Taif', 'Treaty of Tabuk'], answer: 1, explanation: 'The Treaty of Hudaybiyyah was a peace agreement between the Muslims and Quraysh.'},
+
+{category: 'manners', difficulty: 'easy', question: 'What should a Muslim say before eating?', options: ['Alhamdulillah', 'Bismillah', 'SubhanAllah', 'Allahu Akbar'], answer: 1, explanation: 'Muslims say Bismillah before eating.'},
+
+{category: 'manners', difficulty: 'easy', question: 'What should a Muslim say after eating?', options: ['Astaghfirullah', 'Bismillah', 'Alhamdulillah', 'La ilaha illallah'], answer: 2, explanation: 'It is recommended to praise Allah after eating by saying Alhamdulillah.'},
+
+{category: 'manners', difficulty: 'medium', question: 'Which hand is recommended for eating?', options: ['Left hand', 'Right hand', 'Both hands', 'Either hand'], answer: 1, explanation: 'The Prophet taught Muslims to eat with the right hand.'},
+
+{category: 'manners', difficulty: 'hard', question: 'What is the Islamic greeting?', options: ['Marhaba', 'Assalamu Alaikum', 'Sabah al-Khair', 'Ahlan'], answer: 1, explanation: 'Assalamu Alaikum means "Peace be upon you".'},
+
+{category: 'eid', difficulty: 'easy', question: 'How many Eids do Muslims celebrate each year?', options: ['One', 'Two', 'Three', 'Four'], answer: 1, explanation: 'Muslims celebrate Eid al-Fitr and Eid al-Adha.'},
+
+{category: 'eid', difficulty: 'easy', question: 'Which Eid comes after Ramadan?', options: ['Eid al-Adha', 'Eid al-Fitr', 'Ashura', 'Mawlid'], answer: 1, explanation: 'Eid al-Fitr marks the end of Ramadan.'},
+
+{category: 'eid', difficulty: 'medium', question: 'Which Eid is associated with Hajj?', options: ['Eid al-Fitr', 'Eid al-Adha', 'Ashura', 'Laylatul Qadr'], answer: 1, explanation: 'Eid al-Adha occurs during the Hajj season.'},
+
+{category: 'eid', difficulty: 'hard', question: 'What event does Eid al-Adha commemorate?', options: ["The Hijrah", "The first revelation", "Prophet Ibrahim’s willingness to sacrifice his son", "The Battle of Badr"], answer: 2, explanation: "Eid al-Adha commemorates Prophet Ibrahim's obedience to Allah."},
 ];
 
 // ═══════════════════════════════════════════════════════
@@ -99,6 +254,7 @@ function initNavigation() {
       
       App.currentPage = pageId;
       
+      if (App.soundEnabled) Sound.playClick();
       if (pageId === 'quran' && App.surahList.length === 0) loadSurahs();
       if (pageId === 'hadith') initHadithPage();
       if (pageId === 'prayer' && !App.prayerTimes) loadPrayerTimes();
@@ -134,11 +290,257 @@ function initTopMenu() {
   toggle.addEventListener('click', () => {
     const isOpen = topNav.classList.toggle('open');
     toggle.setAttribute('aria-expanded', String(isOpen));
+    if (App.soundEnabled) Sound.playClick();
   });
 
   document.addEventListener('click', (event) => {
     if (!topNav.contains(event.target)) closeTopMenu();
   });
+}
+
+function escapeHTML(text) {
+  return String(text).replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
+}
+
+function updateReviewUI() {
+  const reviewList = document.getElementById('reviewList');
+  const reviewStats = document.getElementById('reviewStats');
+  const allReviews = [...App.reviews, ...App.publicReviews];
+
+  if (reviewStats) {
+    if (!allReviews.length) {
+      reviewStats.textContent = 'No ratings yet. Be the first to submit feedback.';
+    } else {
+      const average = (allReviews.reduce((sum, item) => sum + item.rating, 0) / allReviews.length).toFixed(1);
+      reviewStats.textContent = `${average} ★ average from ${allReviews.length} reviews`;
+    }
+  }
+
+  if (!reviewList) return;
+  if (!allReviews.length) {
+    reviewList.innerHTML = '<div class="review-card"><p style="margin:0;color:rgba(226, 232, 240, 0.8);">No reviews yet. Submit one above to see it here.</p></div>';
+    return;
+  }
+
+  reviewList.innerHTML = allReviews.slice(0, 20).map((item) => {
+    const stars = '★'.repeat(item.rating) + '☆'.repeat(5 - item.rating);
+    const date = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Unknown date';
+    const sourceLabel = item.source === 'community' ? 'Community' : 'Your review';
+    return `
+      <article class="review-card">
+        <div class="review-meta"><span>${stars}</span><span>${date} · ${sourceLabel}</span></div>
+        <p>${escapeHTML(item.comment)}</p>
+      </article>
+    `;
+  }).join('');
+}
+
+function loadPublicReviews() {
+  fetch('reviews.json')
+    .then(response => response.ok ? response.json() : Promise.reject(new Error('Failed to load public reviews')))
+    .then(data => {
+      if (Array.isArray(data)) {
+        App.publicReviews = data.filter(item => typeof item.rating === 'number' && typeof item.comment === 'string').map(item => ({
+          rating: item.rating,
+          comment: item.comment,
+          createdAt: item.createdAt || new Date().toISOString(),
+          source: 'community'
+        }));
+        updateReviewUI();
+      }
+    })
+    .catch((error) => {
+      console.warn('Public reviews load error:', error);
+    });
+}
+
+function applyTheme() {
+  document.body.classList.toggle('hard-dark', App.hardDarkMode);
+  const hardDarkToggle = document.getElementById('hardDarkToggle');
+  if (hardDarkToggle) hardDarkToggle.checked = App.hardDarkMode;
+  document.documentElement.style.colorScheme = App.hardDarkMode ? 'dark' : 'light';
+}
+
+function initSettings() {
+  const hardDarkToggle = document.getElementById('hardDarkToggle');
+  const settingsSoundToggle = document.getElementById('settingsSoundToggle');
+  const settingsHadithLanguage = document.getElementById('settingsHadithLanguage');
+  const soundEffectsCheckbox = document.getElementById('soundEffectsToggle');
+
+  if (hardDarkToggle) {
+    hardDarkToggle.checked = App.hardDarkMode;
+    hardDarkToggle.addEventListener('change', () => {
+      App.hardDarkMode = hardDarkToggle.checked;
+      localStorage.setItem('deenHardDark', JSON.stringify(App.hardDarkMode));
+      applyTheme();
+      if (App.soundEnabled) Sound.playConfirm();
+      showToast(App.hardDarkMode ? 'Hard dark mode enabled' : 'Hard dark mode disabled', 'success');
+    });
+  }
+
+  if (settingsSoundToggle) {
+    settingsSoundToggle.checked = App.soundEnabled;
+    settingsSoundToggle.addEventListener('change', () => {
+      App.soundEnabled = settingsSoundToggle.checked;
+      if (soundEffectsCheckbox) soundEffectsCheckbox.checked = App.soundEnabled;
+      localStorage.setItem('deenSoundEnabled', JSON.stringify(App.soundEnabled));
+      if (App.soundEnabled) {
+        Sound.init();
+        Sound.playConfirm();
+      }
+      showToast(App.soundEnabled ? 'Sound effects enabled' : 'Sound effects disabled', 'success');
+    });
+  }
+
+  if (settingsHadithLanguage) {
+    settingsHadithLanguage.value = App.hadithLanguage;
+    settingsHadithLanguage.addEventListener('change', () => {
+      const previousLanguage = App.hadithLanguage;
+      App.hadithLanguage = settingsHadithLanguage.value;
+      localStorage.setItem('deenHadithLanguage', App.hadithLanguage);
+
+      if (App.currentHadithCollection) {
+        const parts = App.currentHadithCollection.split('-');
+        if (parts.length === 2) {
+          App.currentHadithCollection = `${App.hadithLanguage}-${parts[1]}`;
+        }
+      }
+
+      if (App.soundEnabled) Sound.playClick();
+      updateHadithCollectionOptions();
+      showToast(`Hadith language set to ${App.hadithLanguage === 'ara' ? 'Arabic' : 'English'}`, 'success');
+    });
+  }
+
+  if (soundEffectsCheckbox) {
+    soundEffectsCheckbox.checked = App.soundEnabled;
+    soundEffectsCheckbox.addEventListener('change', () => {
+      App.soundEnabled = soundEffectsCheckbox.checked;
+      if (settingsSoundToggle) settingsSoundToggle.checked = App.soundEnabled;
+      localStorage.setItem('deenSoundEnabled', JSON.stringify(App.soundEnabled));
+      if (App.soundEnabled) {
+        Sound.init();
+        Sound.playConfirm();
+      }
+      showToast(App.soundEnabled ? 'Sound effects enabled' : 'Sound effects disabled', 'success');
+    });
+  }
+}
+
+function resumeAudioContextOnGesture() {
+  if (Sound.context && Sound.context.state === 'suspended') {
+    Sound.context.resume().catch(() => {});
+  }
+}
+
+// Simple toast notification helper
+function showToast(message, type = 'success', timeout = 3500) {
+  try {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.transition = 'opacity 220ms, transform 220ms';
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(12px)';
+      setTimeout(() => { try { container.removeChild(toast); } catch(e){} }, 240);
+    }, timeout);
+  } catch (e) {
+    console.warn('Toast failed', e);
+  }
+}
+
+function initReviewControls() {
+  const reviewForm = document.getElementById('reviewForm');
+  const reviewStars = document.querySelectorAll('#ratingStars button');
+  const reviewComment = document.getElementById('reviewComment');
+  const reviewInfo = document.getElementById('reviewInfo');
+  const clearReviewsBtn = document.getElementById('clearReviewsBtn');
+  let selectedRating = 5;
+
+  const updateStars = (value) => {
+    selectedRating = value;
+    reviewStars.forEach((button) => {
+      const ratingValue = Number(button.dataset.value || '0');
+      button.classList.toggle('active', ratingValue <= value);
+    });
+  };
+
+  reviewStars.forEach((button) => {
+    button.addEventListener('click', () => {
+      const ratingValue = Number(button.dataset.value || '5');
+      updateStars(ratingValue);
+      if (App.soundEnabled) Sound.playClick();
+    });
+  });
+
+  updateStars(selectedRating);
+  updateReviewUI();
+
+  if (reviewForm) {
+    reviewForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const commentText = reviewComment?.value.trim();
+      if (!commentText) {
+        if (reviewInfo) reviewInfo.textContent = 'Please add a short comment before submitting.';
+        return;
+      }
+
+      App.reviews.unshift({
+        rating: selectedRating,
+        comment: commentText,
+        createdAt: new Date().toISOString()
+      });
+      App.reviews = App.reviews.slice(0, 30);
+      localStorage.setItem('deenReviews', JSON.stringify(App.reviews));
+      updateReviewUI();
+      if (reviewInfo) reviewInfo.textContent = 'Thank you! Your rating and comment are saved locally.';
+      if (reviewComment) reviewComment.value = '';
+      updateStars(5);
+      if (App.soundEnabled) Sound.playConfirm();
+      showToast('Review submitted — thank you!', 'success');
+    });
+  }
+
+  if (clearReviewsBtn) {
+    clearReviewsBtn.addEventListener('click', () => {
+      App.reviews = [];
+      localStorage.setItem('deenReviews', JSON.stringify(App.reviews));
+      updateReviewUI();
+      if (reviewInfo) reviewInfo.textContent = 'Saved reviews cleared.';
+      if (App.soundEnabled) Sound.playClick();
+      showToast('Saved reviews cleared.', 'success');
+    });
+  }
+}
+
+function initSoundToggle() {
+  const soundToggle = document.getElementById('soundEffectsToggle');
+  if (!soundToggle) return;
+
+  soundToggle.checked = App.soundEnabled;
+  soundToggle.addEventListener('change', () => {
+    App.soundEnabled = soundToggle.checked;
+    localStorage.setItem('deenSoundEnabled', JSON.stringify(App.soundEnabled));
+    if (App.soundEnabled) {
+      Sound.init();
+      Sound.playConfirm();
+    }
+    showToast(App.soundEnabled ? 'Sound effects enabled' : 'Sound effects disabled', 'success');
+  });
+
+  document.addEventListener('click', () => {
+    resumeAudioContextOnGesture();
+  }, { once: true });
 }
 
 function initStoryReadMore() {
@@ -617,21 +1019,38 @@ function renderBookmarks() {
 // HADITH — NEW CORS-FREE API (fawazahmed0 via jsdelivr)
 // ═══════════════════════════════════════════════════════
 
+function updateHadithCollectionOptions() {
+  const select = document.getElementById('hadithCollectionSelect');
+  if (!select) return;
+
+  const prefix = App.hadithLanguage === 'ara' ? 'ara' : 'eng';
+  const collections = [
+    { key: 'bukhari', label: 'Sahih al-Bukhari' },
+    { key: 'muslim', label: 'Sahih Muslim' },
+    { key: 'abudawud', label: 'Sunan Abu Dawud' },
+    { key: 'ibnmajah', label: 'Sunan Ibn Majah' },
+    { key: 'tirmidhi', label: 'Jami at-Tirmidhi' },
+    { key: 'nasai', label: 'Sunan an-Nasai' }
+  ];
+
+  select.innerHTML = collections.map(item => `
+    <option value="${prefix}-${item.key}">${item.label}</option>
+  `).join('');
+
+  if (!select.querySelector(`option[value="${App.currentHadithCollection}"]`)) {
+    App.currentHadithCollection = `${prefix}-bukhari`;
+  }
+
+  select.value = App.currentHadithCollection;
+}
+
 function initHadithControls() {
   const select = document.getElementById('hadithCollectionSelect');
   const loadBtn = document.getElementById('loadHadithBtn');
   
   if (!select || !loadBtn) return;
 
-  // Populate with new collection keys
-  select.innerHTML = `
-    <option value="eng-bukhari">Sahih al-Bukhari</option>
-    <option value="eng-muslim">Sahih Muslim</option>
-    <option value="eng-abudawud">Sunan Abu Dawud</option>
-    <option value="eng-ibnmajah">Sunan Ibn Majah</option>
-    <option value="eng-tirmidhi">Jami at-Tirmidhi</option>
-    <option value="eng-nasai">Sunan an-Nasai</option>
-  `;
+  updateHadithCollectionOptions();
 
   loadBtn.addEventListener('click', () => {
     App.currentHadithCollection = select.value;
@@ -1374,8 +1793,10 @@ function selectQuizAnswer(selectedIndex) {
   if (correct) {
     App.quizStreak++;
     App.quizScore += 10 + Math.max(0, App.quizStreak - 1) * 2;
+    if (App.soundEnabled) Sound.playCorrect();
   } else {
     App.quizStreak = 0;
+    if (App.soundEnabled) Sound.playIncorrect();
   }
 
   if (feedbackEl) {
@@ -1420,6 +1841,7 @@ function finishQuiz(endedEarly = false) {
   if (roundEl) roundEl.textContent = `Finished ${Math.min(completed, App.quizQuestions.length)} questions`;
   if (progressEl) progressEl.style.width = '100%';
   if (bestDisplay) bestDisplay.textContent = App.quizBest;
+  if (App.soundEnabled) Sound.playNotification();
 }
 
 function resetQuizBest() {
@@ -1582,9 +2004,15 @@ document.addEventListener('DOMContentLoaded', () => {
   updateScrollToggleButton();
   initQuiz();
   initFeedback();
+  initReviewControls();
+  loadPublicReviews();
+  initSettings();
+  initSoundToggle();
   initPWAInstall();
   registerServiceWorker();
   
+  applyTheme();
+  Sound.init();
   loadSurahs();
   // Also load prayer times on startup so dashboard shows Next Prayer
   loadPrayerTimes();
