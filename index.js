@@ -353,10 +353,12 @@ function loadPublicReviews() {
           source: 'community'
         }));
         updateReviewUI();
+        showToast('Community reviews loaded', 'success');
       }
     })
     .catch((error) => {
       console.warn('Public reviews load error:', error);
+      showToast('Failed to load community reviews', 'error');
     });
 }
 
@@ -1197,6 +1199,8 @@ async function loadHadithCollection() {
     if (document.getElementById('hadithNextPage')) {
       document.getElementById('hadithNextPage').disabled = endIdx >= hadiths.length;
     }
+    // Quiet success toast for first page loads only
+    if (App.currentHadithPage === 1) showToast(`Loaded ${hadiths.length} hadiths from ${collection}`, 'success');
 
   } catch (err) {
     console.error('❌ Hadith load error:', err);
@@ -1207,6 +1211,7 @@ async function loadHadithCollection() {
         <button onclick="loadHadithCollection()" style="margin-top:12px;padding:8px 16px;font-size:0.85rem;">🔄 Retry</button>
       </div>
     `;
+    showToast(`Failed to load hadiths: ${err.message}`, 'error');
   }
 }
 
