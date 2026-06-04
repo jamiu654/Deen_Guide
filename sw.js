@@ -1,4 +1,4 @@
-const CACHE_NAME = 'deen-guide-v1';
+const CACHE_NAME = 'deen-guide-v2';
 const APP_SHELL = [
   './',
   './index.html',

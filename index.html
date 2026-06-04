@@ -419,6 +419,10 @@
           <option value="pillars">Five Pillars</option>
           <option value="prayer">Prayer</option>
           <option value="history">Islamic History</option>
+          <option value="prophets">Prophets</option>
+          <option value="ramadan">Ramadan</option>
+          <option value="manners">Manners</option>
+          <option value="eid">Eid</option>
         </select>
         <select id="quizDifficulty">
           <option value="all">All Difficulties</option>
@@ -438,6 +442,11 @@
           <span id="quizScore">Score: 0</span>
           <span id="quizStreak">Streak: 0</span>
         </div>
+        <div class="quiz-insights" id="quizInsights">
+          <span>Category: Any</span>
+          <span>Difficulty: Mixed</span>
+          <span>Hints: 2</span>
+        </div>
         <div class="quiz-progress">
           <div id="quizProgressFill"></div>
         </div>
@@ -445,6 +454,7 @@
         <div class="quiz-options" id="quizOptions"></div>
         <div class="quiz-feedback" id="quizFeedback"></div>
         <div class="quiz-actions">
+          <button id="hintQuizBtn" class="secondary" disabled>Hint</button>
           <button id="skipQuizBtn" class="secondary" disabled>Skip</button>
           <button id="nextQuizBtn" class="secondary" disabled>Next Question</button>
           <button id="restartQuizBtn" class="secondary">Restart</button>

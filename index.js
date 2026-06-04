@@ -24,6 +24,8 @@ const App = {
   quizScore: 0,
   quizStreak: 0,
   quizAnswered: false,
+  quizHintsLeft: 2,
+  quizHintsUsed: 0,
   soundEnabled: JSON.parse(localStorage.getItem('deenSoundEnabled')) ?? true,
   reviews: JSON.parse(localStorage.getItem('deenReviews')) || [],
   publicReviews: [],
@@ -31,6 +33,7 @@ const App = {
   hadithLanguage: localStorage.getItem('deenHadithLanguage') || 'eng',
   prayerAlertsEnabled: JSON.parse(localStorage.getItem('deenPrayerAlertsEnabled')) ?? true,
   adhanSoundEnabled: JSON.parse(localStorage.getItem('deenAdhanSoundEnabled')) ?? true,
+  adhanPlayer: null,
   prayerAlertTimers: [],
   triggeredPrayerAlerts: JSON.parse(localStorage.getItem('deenTriggeredPrayerAlerts')) || {}
 };
@@ -41,7 +44,11 @@ const API = {
   // NEW: fawazahmed0/hadith-api via jsdelivr (CORS-FREE, no auth needed)
   hadith: 'https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions',
   prayer: 'https://api.aladhan.com/v1',
-  adhanAudio: 'https://cdn.aladhan.com/audio/adhans/a9.mp3'
+  adhanAudio: [
+    'https://cdn.aladhan.com/audio/adhans/a1.mp3',
+    'https://cdn.aladhan.com/audio/adhans/a9.mp3',
+    'https://www.islamcan.com/audio/adhan/azan20.mp3'
+  ]
 };
 
 const Sound = {
@@ -85,12 +92,28 @@ const Sound = {
     this.playTone(640, 0.11, 'sine');
   },
   playAdhan() {
-    if (!App.soundEnabled || !App.adhanSoundEnabled) return;
+    if (!App.adhanSoundEnabled) return;
 
-    const audio = new Audio(API.adhanAudio);
+    this.playAdhanFromList(0);
+  },
+  playAdhanFromList(index) {
+    const audioUrl = API.adhanAudio[index];
+    if (!audioUrl) {
+      this.playAdhanToneFallback();
+      return;
+    }
+
+    if (App.adhanPlayer) {
+      App.adhanPlayer.pause();
+      App.adhanPlayer.src = '';
+    }
+
+    const audio = new Audio(audioUrl);
+    App.adhanPlayer = audio;
     audio.preload = 'auto';
     audio.volume = 0.85;
-    audio.play().catch(() => this.playAdhanToneFallback());
+    audio.addEventListener('error', () => this.playAdhanFromList(index + 1), { once: true });
+    audio.play().catch(() => this.playAdhanFromList(index + 1));
   },
   playAdhanToneFallback() {
     if (!this.context) return;
@@ -106,7 +129,14 @@ const Sound = {
 
     let delay = 0;
     pattern.forEach(([frequency, duration]) => {
-      setTimeout(() => this.playTone(frequency, duration, 'sine'), delay);
+      setTimeout(() => {
+        const oscillator = this.context.createOscillator();
+        oscillator.type = 'sine';
+        oscillator.frequency.value = frequency;
+        oscillator.connect(this.gainNode);
+        oscillator.start();
+        oscillator.stop(this.context.currentTime + duration);
+      }, delay);
       delay += duration * 1000 + 80;
     });
   }
@@ -1872,18 +1902,20 @@ function initQuiz() {
   const startBtn = document.getElementById('startQuizBtn');
   const nextBtn = document.getElementById('nextQuizBtn');
   const skipBtn = document.getElementById('skipQuizBtn');
+  const hintBtn = document.getElementById('hintQuizBtn');
   const restartBtn = document.getElementById('restartQuizBtn');
   const endBtn = document.getElementById('endQuizBtn');
   const resetBestBtn = document.getElementById('resetQuizBestBtn');
   const bestDisplay = document.getElementById('quizBestDisplay');
 
-  if (!startBtn || !nextBtn || !skipBtn || !restartBtn || !endBtn || !resetBestBtn) return;
+  if (!startBtn || !nextBtn || !skipBtn || !hintBtn || !restartBtn || !endBtn || !resetBestBtn) return;
 
   if (bestDisplay) bestDisplay.textContent = App.quizBest;
   renderQuizIntro();
 
   startBtn.addEventListener('click', startQuiz);
   restartBtn.addEventListener('click', startQuiz);
+  hintBtn.addEventListener('click', useQuizHint);
   skipBtn.addEventListener('click', skipQuizQuestion);
   endBtn.addEventListener('click', () => finishQuiz(true));
   resetBestBtn.addEventListener('click', resetQuizBest);
@@ -1913,15 +1945,40 @@ function startQuiz() {
   App.quizScore = 0;
   App.quizStreak = 0;
   App.quizAnswered = false;
+  App.quizHintsLeft = 2;
+  App.quizHintsUsed = 0;
   renderQuizQuestion();
 }
 
 function setQuizRoundControls(isActive) {
   const skipBtn = document.getElementById('skipQuizBtn');
+  const hintBtn = document.getElementById('hintQuizBtn');
   const endBtn = document.getElementById('endQuizBtn');
 
   if (skipBtn) skipBtn.disabled = !isActive;
+  if (hintBtn) hintBtn.disabled = !isActive || App.quizHintsLeft <= 0 || App.quizAnswered;
   if (endBtn) endBtn.disabled = !isActive;
+}
+
+function getQuizLabel(value, fallback) {
+  if (!value || value === 'all') return fallback;
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function updateQuizInsights(current = null) {
+  const insightsEl = document.getElementById('quizInsights');
+  if (!insightsEl) return;
+
+  const category = current ? getQuizLabel(current.category, 'Any') : getQuizLabel(document.getElementById('quizCategory')?.value, 'Any');
+  const difficulty = current ? getQuizLabel(current.difficulty, 'Mixed') : getQuizLabel(document.getElementById('quizDifficulty')?.value, 'Mixed');
+  const bonus = App.quizStreak >= 2 ? `Bonus: +${Math.max(0, App.quizStreak - 1) * 2}` : 'Bonus: Ready';
+
+  insightsEl.innerHTML = `
+    <span>Category: ${category}</span>
+    <span>Difficulty: ${difficulty}</span>
+    <span>Hints: ${App.quizHintsLeft}</span>
+    <span>${bonus}</span>
+  `;
 }
 
 function renderQuizIntro() {
@@ -1938,7 +1995,10 @@ function renderQuizIntro() {
   if (optionsEl) optionsEl.innerHTML = '';
   if (feedbackEl) feedbackEl.textContent = 'You will get 10 points for each correct answer, plus a small streak bonus.';
   if (nextBtn) nextBtn.disabled = true;
+  App.quizHintsLeft = 2;
+  App.quizHintsUsed = 0;
   setQuizRoundControls(false);
+  updateQuizInsights();
   if (roundEl) roundEl.textContent = 'Question 1 of 10';
   if (scoreEl) scoreEl.textContent = 'Score: 0';
   if (streakEl) streakEl.textContent = 'Streak: 0';
@@ -1950,6 +2010,7 @@ function renderQuizQuestion() {
   const optionsEl = document.getElementById('quizOptions');
   const feedbackEl = document.getElementById('quizFeedback');
   const nextBtn = document.getElementById('nextQuizBtn');
+  const hintBtn = document.getElementById('hintQuizBtn');
   const roundEl = document.getElementById('quizRound');
   const scoreEl = document.getElementById('quizScore');
   const streakEl = document.getElementById('quizStreak');
@@ -1969,7 +2030,9 @@ function renderQuizQuestion() {
   optionsEl.innerHTML = '';
   if (feedbackEl) feedbackEl.textContent = '';
   if (nextBtn) nextBtn.disabled = true;
+  if (hintBtn) hintBtn.disabled = App.quizHintsLeft <= 0;
   setQuizRoundControls(true);
+  updateQuizInsights(current);
   if (roundEl) roundEl.textContent = `Question ${App.quizIndex + 1} of ${App.quizQuestions.length}`;
   if (scoreEl) scoreEl.textContent = `Score: ${App.quizScore}`;
   if (streakEl) streakEl.textContent = `Streak: ${App.quizStreak}`;
@@ -1979,10 +2042,33 @@ function renderQuizQuestion() {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'quiz-option';
+    btn.dataset.letter = String.fromCharCode(65 + index);
+    btn.dataset.index = String(index);
     btn.textContent = option;
     btn.addEventListener('click', () => selectQuizAnswer(index));
     optionsEl.appendChild(btn);
   });
+}
+
+function useQuizHint() {
+  if (!App.quizQuestions.length || App.quizAnswered || App.quizHintsLeft <= 0) return;
+
+  const current = App.quizQuestions[App.quizIndex];
+  const optionBtns = [...document.querySelectorAll('.quiz-option:not(:disabled)')];
+  const wrongOptions = optionBtns.filter(button => Number(button.dataset.index) !== current.answer);
+  const feedbackEl = document.getElementById('quizFeedback');
+
+  shuffleItems(wrongOptions).slice(0, Math.min(2, wrongOptions.length)).forEach(button => {
+    button.disabled = true;
+    button.classList.add('hint-hidden');
+  });
+
+  App.quizHintsLeft--;
+  App.quizHintsUsed++;
+  updateQuizInsights(current);
+  setQuizRoundControls(true);
+  if (feedbackEl) feedbackEl.textContent = 'Hint used: two unlikely answers are faded out.';
+  if (App.soundEnabled) Sound.playClick();
 }
 
 function skipQuizQuestion() {
@@ -2001,6 +2087,7 @@ function selectQuizAnswer(selectedIndex) {
   const feedbackEl = document.getElementById('quizFeedback');
   const nextBtn = document.getElementById('nextQuizBtn');
   const skipBtn = document.getElementById('skipQuizBtn');
+  const hintBtn = document.getElementById('hintQuizBtn');
   const scoreEl = document.getElementById('quizScore');
   const streakEl = document.getElementById('quizStreak');
 
@@ -2029,8 +2116,10 @@ function selectQuizAnswer(selectedIndex) {
   }
   if (scoreEl) scoreEl.textContent = `Score: ${App.quizScore}`;
   if (streakEl) streakEl.textContent = `Streak: ${App.quizStreak}`;
+  updateQuizInsights(current);
   if (nextBtn) nextBtn.disabled = false;
   if (skipBtn) skipBtn.disabled = true;
+  if (hintBtn) hintBtn.disabled = true;
 }
 
 function finishQuiz(endedEarly = false) {
@@ -2056,10 +2145,11 @@ function finishQuiz(endedEarly = false) {
       ? '<strong>New best score!</strong> Nice work. Press Restart to play again.'
       : endedEarly
         ? 'Quiz ended. Press Restart to try another round or change the category.'
-        : 'Press Restart to try another round or change the category.';
+        : `Round complete. You used ${App.quizHintsUsed} hint${App.quizHintsUsed === 1 ? '' : 's'} and finished with a streak of ${App.quizStreak}.`;
   }
   if (nextBtn) nextBtn.disabled = true;
   setQuizRoundControls(false);
+  updateQuizInsights();
   const completed = endedEarly ? App.quizIndex + 1 : App.quizQuestions.length;
   if (roundEl) roundEl.textContent = `Finished ${Math.min(completed, App.quizQuestions.length)} questions`;
   if (progressEl) progressEl.style.width = '100%';
