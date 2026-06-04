@@ -28,7 +28,11 @@ const App = {
   reviews: JSON.parse(localStorage.getItem('deenReviews')) || [],
   publicReviews: [],
   hardDarkMode: JSON.parse(localStorage.getItem('deenHardDark')) || false,
-  hadithLanguage: localStorage.getItem('deenHadithLanguage') || 'eng'
+  hadithLanguage: localStorage.getItem('deenHadithLanguage') || 'eng',
+  prayerAlertsEnabled: JSON.parse(localStorage.getItem('deenPrayerAlertsEnabled')) ?? true,
+  adhanSoundEnabled: JSON.parse(localStorage.getItem('deenAdhanSoundEnabled')) ?? true,
+  prayerAlertTimers: [],
+  triggeredPrayerAlerts: JSON.parse(localStorage.getItem('deenTriggeredPrayerAlerts')) || {}
 };
 App.scrollEnabled = JSON.parse(localStorage.getItem('quranScrollEnabled')) || false;
 
@@ -36,7 +40,8 @@ const API = {
   quran: 'https://api.alquran.cloud/v1',
   // NEW: fawazahmed0/hadith-api via jsdelivr (CORS-FREE, no auth needed)
   hadith: 'https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions',
-  prayer: 'https://api.aladhan.com/v1'
+  prayer: 'https://api.aladhan.com/v1',
+  adhanAudio: 'https://cdn.aladhan.com/audio/adhans/a9.mp3'
 };
 
 const Sound = {
@@ -78,6 +83,32 @@ const Sound = {
   },
   playNotification() {
     this.playTone(640, 0.11, 'sine');
+  },
+  playAdhan() {
+    if (!App.soundEnabled || !App.adhanSoundEnabled) return;
+
+    const audio = new Audio(API.adhanAudio);
+    audio.preload = 'auto';
+    audio.volume = 0.85;
+    audio.play().catch(() => this.playAdhanToneFallback());
+  },
+  playAdhanToneFallback() {
+    if (!this.context) return;
+    if (this.context.state === 'suspended') {
+      this.context.resume().catch(() => {});
+    }
+
+    const pattern = [
+      [392, 0.38], [440, 0.38], [494, 0.56], [440, 0.32],
+      [392, 0.46], [330, 0.52], [392, 0.7],
+      [494, 0.42], [523, 0.42], [587, 0.72]
+    ];
+
+    let delay = 0;
+    pattern.forEach(([frequency, duration]) => {
+      setTimeout(() => this.playTone(frequency, duration, 'sine'), delay);
+      delay += duration * 1000 + 80;
+    });
   }
 };
 
@@ -374,6 +405,9 @@ function initSettings() {
   const settingsSoundToggle = document.getElementById('settingsSoundToggle');
   const settingsHadithLanguage = document.getElementById('settingsHadithLanguage');
   const soundEffectsCheckbox = document.getElementById('soundEffectsToggle');
+  const prayerAlertsToggle = document.getElementById('prayerAlertsToggle');
+  const adhanSoundToggle = document.getElementById('adhanSoundToggle');
+  const testAdhanBtn = document.getElementById('testAdhanBtn');
 
   if (hardDarkToggle) {
     hardDarkToggle.checked = App.hardDarkMode;
@@ -400,22 +434,45 @@ function initSettings() {
     });
   }
 
+  if (prayerAlertsToggle) {
+    prayerAlertsToggle.checked = App.prayerAlertsEnabled;
+    prayerAlertsToggle.addEventListener('change', async () => {
+      App.prayerAlertsEnabled = prayerAlertsToggle.checked;
+      localStorage.setItem('deenPrayerAlertsEnabled', JSON.stringify(App.prayerAlertsEnabled));
+
+      if (App.prayerAlertsEnabled) {
+        await requestPrayerNotificationPermission();
+        schedulePrayerAlerts(App.prayerTimes);
+      } else {
+        clearPrayerAlertTimers();
+      }
+
+      showToast(App.prayerAlertsEnabled ? 'Prayer alerts enabled' : 'Prayer alerts disabled', 'success');
+    });
+  }
+
+  if (adhanSoundToggle) {
+    adhanSoundToggle.checked = App.adhanSoundEnabled;
+    adhanSoundToggle.addEventListener('change', () => {
+      App.adhanSoundEnabled = adhanSoundToggle.checked;
+      localStorage.setItem('deenAdhanSoundEnabled', JSON.stringify(App.adhanSoundEnabled));
+      showToast(App.adhanSoundEnabled ? 'Adhan sound enabled' : 'Adhan sound disabled', 'success');
+    });
+  }
+
+  if (testAdhanBtn) {
+    testAdhanBtn.addEventListener('click', async () => {
+      Sound.init();
+      await requestPrayerNotificationPermission();
+      triggerPrayerAlert('Adhan Test', { test: true });
+    });
+  }
+
   if (settingsHadithLanguage) {
     settingsHadithLanguage.value = App.hadithLanguage;
     settingsHadithLanguage.addEventListener('change', () => {
-      const previousLanguage = App.hadithLanguage;
-      App.hadithLanguage = settingsHadithLanguage.value;
-      localStorage.setItem('deenHadithLanguage', App.hadithLanguage);
-
-      if (App.currentHadithCollection) {
-        const parts = App.currentHadithCollection.split('-');
-        if (parts.length === 2) {
-          App.currentHadithCollection = `${App.hadithLanguage}-${parts[1]}`;
-        }
-      }
-
+      setHadithLanguage(settingsHadithLanguage.value, { load: document.getElementById('hadith')?.classList.contains('active') });
       if (App.soundEnabled) Sound.playClick();
-      updateHadithCollectionOptions();
       showToast(`Hadith language set to ${App.hadithLanguage === 'ara' ? 'Arabic' : 'English'}`, 'success');
     });
   }
@@ -733,13 +790,17 @@ async function loadVerses() {
   const edition = document.getElementById('translationSelect')?.value || 'en.sahih';
   const reciter = document.getElementById('reciterSelect')?.value || '1';
   
-  if (!number) return;
+  if (!number) {
+    document.getElementById('quran')?.classList.remove('quran-reading-mode');
+    return;
+  }
 
   const arabicEl = document.getElementById('arabicVerses');
   const transEl = document.getElementById('verses');
 
   if (!arabicEl || !transEl) return;
 
+  document.getElementById('quran')?.classList.add('quran-reading-mode');
   arabicEl.innerHTML = '<div class="loading"><div class="spinner"></div> Loading Arabic text...</div>';
   transEl.innerHTML = '<div class="loading"><div class="spinner"></div> Loading translation...</div>';
 
@@ -1046,6 +1107,51 @@ function updateHadithCollectionOptions() {
   select.value = App.currentHadithCollection;
 }
 
+function syncHadithLanguageControls() {
+  const modeButtons = document.querySelectorAll('[data-hadith-lang]');
+  const settingsHadithLanguage = document.getElementById('settingsHadithLanguage');
+
+  modeButtons.forEach(button => {
+    const isActive = button.dataset.hadithLang === App.hadithLanguage;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+
+  if (settingsHadithLanguage) {
+    settingsHadithLanguage.value = App.hadithLanguage;
+  }
+}
+
+function setHadithLanguage(language, { load = false } = {}) {
+  const nextLanguage = language === 'ara' ? 'ara' : 'eng';
+  const currentBook = (App.currentHadithCollection || 'eng-bukhari').split('-')[1] || 'bukhari';
+
+  App.hadithLanguage = nextLanguage;
+  App.currentHadithCollection = `${nextLanguage}-${currentBook}`;
+  App.currentHadithPage = 1;
+  localStorage.setItem('deenHadithLanguage', App.hadithLanguage);
+
+  updateHadithCollectionOptions();
+  syncHadithLanguageControls();
+
+  if (load) {
+    loadHadithCollection();
+  }
+}
+
+function isArabicHadithCollection(collection = App.currentHadithCollection) {
+  return (collection || '').startsWith('ara-');
+}
+
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function initHadithControls() {
   const select = document.getElementById('hadithCollectionSelect');
   const loadBtn = document.getElementById('loadHadithBtn');
@@ -1053,6 +1159,21 @@ function initHadithControls() {
   if (!select || !loadBtn) return;
 
   updateHadithCollectionOptions();
+  syncHadithLanguageControls();
+
+  document.querySelectorAll('[data-hadith-lang]').forEach(button => {
+    button.addEventListener('click', () => {
+      if (button.dataset.hadithLang === App.hadithLanguage) return;
+      setHadithLanguage(button.dataset.hadithLang, { load: true });
+      if (App.soundEnabled) Sound.playClick();
+      showToast(`Hadith mode set to ${App.hadithLanguage === 'ara' ? 'Arabic' : 'English'}`, 'success');
+    });
+  });
+
+  select.addEventListener('change', () => {
+    App.currentHadithCollection = select.value;
+    App.currentHadithPage = 1;
+  });
 
   loadBtn.addEventListener('click', () => {
     App.currentHadithCollection = select.value;
@@ -1095,10 +1216,13 @@ async function loadHadithCollection() {
   const pagination = document.getElementById('hadithPagination');
   const pageInfo = document.getElementById('hadithPageInfo');
   const collection = App.currentHadithCollection;
+  const isArabic = isArabicHadithCollection(collection);
   
   if (!grid) return;
   
   grid.innerHTML = '<div class="loading"><div class="spinner"></div> Loading hadiths...</div>';
+  grid.classList.toggle('hadith-grid-arabic', isArabic);
+  grid.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
   if (pagination) pagination.classList.add('hidden');
 
   try {
@@ -1163,12 +1287,12 @@ async function loadHadithCollection() {
       const safeFull = text.replace(/"/g, '&quot;').replace(/'/g, "\'").replace(/\n/g, '\\n');
 
       return `
-        <div class="hadith-card glass" style="position:relative;" data-full="${safeFull}" data-narrator="${(narrator+'').replace(/"/g,'&quot;')}">
+        <div class="hadith-card glass${isArabic ? ' is-arabic' : ''}" style="position:relative;" data-full="${safeFull}" data-narrator="${(narrator+'').replace(/"/g,'&quot;')}" dir="${isArabic ? 'rtl' : 'ltr'}" lang="${isArabic ? 'ar' : 'en'}">
           <button class="bookmark-mini" onclick='bookmarkHadith(${hadithId}, "${collection}", "Hadith #${hadithId}", "${safeText}")' title="Bookmark" style="position:absolute;top:12px;right:12px;background:none;box-shadow:none;">🔖</button>
           <h4>Hadith #${hadithId}</h4>
-          ${narrator ? `<p style="font-size:0.85rem;color:var(--gold-400);margin-bottom:8px;"><strong>${narrator}</strong></p>` : ''}
-          <p>${shortText}</p>
-          ${grade ? `<div style="margin-top:8px;font-size:0.8rem;color:var(--emerald-400);">Grade: ${grade}</div>` : ''}
+          ${narrator ? `<p class="hadith-narrator"><strong>${narrator}</strong></p>` : ''}
+          <p class="hadith-text">${shortText}</p>
+          ${grade ? `<div class="hadith-grade">Grade: ${grade}</div>` : ''}
           <div class="source">${HADITH_COLLECTIONS[collection]?.name || collection}</div>
         </div>
       `;
@@ -1182,7 +1306,7 @@ async function loadHadithCollection() {
           if (ev.target.closest('.bookmark-mini')) return; // allow bookmarking
           const full = card.getAttribute('data-full') || '';
           const narrator = card.getAttribute('data-narrator') || '';
-          openHadithModal({ title: card.querySelector('h4')?.textContent || 'Hadith', narrator, text: full });
+          openHadithModal({ title: card.querySelector('h4')?.textContent || 'Hadith', narrator, text: full, language: isArabic ? 'ara' : 'eng' });
         });
       });
     }, 30);
@@ -1216,7 +1340,7 @@ async function loadHadithCollection() {
 }
 
 // Hadith modal helper
-function openHadithModal({ title = 'Hadith', narrator = '', text = '' } = {}) {
+function openHadithModal({ title = 'Hadith', narrator = '', text = '', language = App.hadithLanguage } = {}) {
   let modal = document.getElementById('hadithModal');
   if (!modal) {
     modal = document.createElement('div');
@@ -1234,7 +1358,11 @@ function openHadithModal({ title = 'Hadith', narrator = '', text = '' } = {}) {
     modal.querySelector('.modal-close').addEventListener('click', () => modal.classList.add('hidden'));
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
   }
+  const isArabic = language === 'ara';
   modal.classList.remove('hidden');
+  modal.classList.toggle('is-arabic', isArabic);
+  modal.querySelector('.modal-content').setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+  modal.querySelector('.modal-content').setAttribute('lang', isArabic ? 'ar' : 'en');
   modal.querySelector('.modal-title').textContent = title;
   modal.querySelector('.modal-narrator').textContent = narrator;
   const bodyEl = modal.querySelector('.modal-body');
@@ -1246,6 +1374,94 @@ function openHadithModal({ title = 'Hadith', narrator = '', text = '' } = {}) {
 // ═══════════════════════════════════════════════════════
 // PRAYER TIMES
 // ═══════════════════════════════════════════════════════
+
+const FARD_PRAYERS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+
+function getTodayKey() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parsePrayerTime(timeText) {
+  const match = String(timeText || '').match(/(\d{1,2}):(\d{2})/);
+  if (!match) return null;
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+}
+
+function clearPrayerAlertTimers() {
+  App.prayerAlertTimers.forEach(timerId => clearTimeout(timerId));
+  App.prayerAlertTimers = [];
+}
+
+async function requestPrayerNotificationPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+
+  try {
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  } catch (err) {
+    return false;
+  }
+}
+
+function triggerPrayerAlert(prayerName, { test = false } = {}) {
+  Sound.init();
+  if (App.adhanSoundEnabled) Sound.playAdhan();
+
+  const title = test ? 'Adhan test' : `${prayerName} prayer time`;
+  const message = test ? 'This is how your prayer alert will sound.' : `It is time for ${prayerName}.`;
+
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, {
+      body: message,
+      icon: 'icons/app-icon-192.png',
+      badge: 'icons/app-icon-192.png'
+    });
+  }
+
+  showToast(message, 'success');
+}
+
+function schedulePrayerAlerts(times) {
+  clearPrayerAlertTimers();
+  if (!App.prayerAlertsEnabled || !times) return;
+
+  const todayKey = getTodayKey();
+  if (!App.triggeredPrayerAlerts[todayKey]) {
+    App.triggeredPrayerAlerts = { [todayKey]: {} };
+  }
+
+  const now = new Date();
+
+  FARD_PRAYERS.forEach(prayerName => {
+    const prayerTime = parsePrayerTime(times[prayerName]);
+    if (!prayerTime) return;
+
+    const delay = prayerTime.getTime() - now.getTime();
+    if (delay <= 0 || App.triggeredPrayerAlerts[todayKey][prayerName]) return;
+
+    const timerId = setTimeout(() => {
+      App.triggeredPrayerAlerts[todayKey][prayerName] = true;
+      localStorage.setItem('deenTriggeredPrayerAlerts', JSON.stringify(App.triggeredPrayerAlerts));
+      triggerPrayerAlert(prayerName);
+      loadPrayerTimes();
+    }, delay);
+
+    App.prayerAlertTimers.push(timerId);
+  });
+}
 
 async function loadPrayerTimes() {
   const grid = document.getElementById('prayerTimes');
@@ -1279,8 +1495,9 @@ async function loadPrayerTimes() {
     const fardPrayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     for (const name of fardPrayers) {
       if (!times[name]) continue;
-      const [h, m] = times[name].split(':').map(Number);
-      const prayerMinutes = h * 60 + m;
+      const prayerTime = parsePrayerTime(times[name]);
+      if (!prayerTime) continue;
+      const prayerMinutes = prayerTime.getHours() * 60 + prayerTime.getMinutes();
       const diff = prayerMinutes - currentMinutes;
       if (diff > 0 && diff < minDiff) {
         minDiff = diff;
@@ -1305,10 +1522,11 @@ async function loadPrayerTimes() {
     // Save fetched prayer times to App so other parts (dashboard) can use them
     App.prayerTimes = times;
     App.prayerLocation = locationName || 'Your Location';
+    schedulePrayerAlerts(times);
 
     grid.innerHTML = prayerOrder.map(name => {
-      const [h, m] = times[name].split(':').map(Number);
-      const prayerMinutes = h * 60 + m;
+      const prayerTime = parsePrayerTime(times[name]);
+      const prayerMinutes = prayerTime ? prayerTime.getHours() * 60 + prayerTime.getMinutes() : Infinity;
       const isActive = name === nextPrayer;
       const isPast = prayerMinutes < currentMinutes && name !== 'Sunrise';
 

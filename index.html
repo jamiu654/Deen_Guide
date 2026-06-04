@@ -300,18 +300,13 @@
     <div class="section-box glass">
       <h2 class="section-title">📜 Hadith Collection</h2>
       
-      <div class="reader-controls" style="margin-bottom:20px;">
+      <div class="hadith-toolbar" style="margin-bottom:20px;">
+        <div class="hadith-mode-toggle" role="group" aria-label="Hadith language mode">
+          <button type="button" class="hadith-mode-btn active" data-hadith-lang="eng" aria-pressed="true">English</button>
+          <button type="button" class="hadith-mode-btn" data-hadith-lang="ara" aria-pressed="false">Arabic</button>
+        </div>
         <select id="hadithCollectionSelect">
-          <option value="eng-bukhari">Sahih al-Bukhari (English)</option>
-          <option value="ara-bukhari">Sahih al-Bukhari (Arabic)</option>
-          <option value="eng-muslim">Sahih Muslim (English)</option>
-          <option value="ara-muslim">Sahih Muslim (Arabic)</option>
-          <option value="eng-abudawud">Sunan Abu Dawud (English)</option>
-          <option value="ara-abudawud">Sunan Abu Dawud (Arabic)</option>
-          <option value="eng-ibnmajah">Sunan Ibn Majah (English)</option>
-          <option value="ara-ibnmajah">Sunan Ibn Majah (Arabic)</option>
-          <option value="eng-tirmidhi">Jami at-Tirmidhi (English)</option>
-          <option value="ara-tirmidhi">Jami at-Tirmidhi (Arabic)</option>
+          <option value="eng-bukhari">Sahih al-Bukhari</option>
         </select>
         <button id="loadHadithBtn">Load Hadiths</button>
       </div>
@@ -551,6 +546,19 @@
             <input type="checkbox" id="settingsSoundToggle" />
             <span>Sound Effects</span>
           </label>
+        </div>
+        <div class="settings-card glass">
+          <h3>Prayer alerts</h3>
+          <p style="color:var(--white-muted);line-height:1.7;">Get an alert and adhan sound when each fard prayer time begins.</p>
+          <label class="toggle-switch">
+            <input type="checkbox" id="prayerAlertsToggle" />
+            <span>Prayer Time Alerts</span>
+          </label>
+          <label class="toggle-switch" style="margin-top:12px;">
+            <input type="checkbox" id="adhanSoundToggle" />
+            <span>Adhan Sound</span>
+          </label>
+          <button type="button" id="testAdhanBtn" class="secondary" style="margin-top:14px;">Test Adhan</button>
         </div>
         <div class="settings-card glass">
           <h3>Hadith language</h3>

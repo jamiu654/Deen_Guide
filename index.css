@@ -855,6 +855,22 @@ body::after {
   margin-top: 20px;
 }
 
+#quran.quran-reading-mode .section-box {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+}
+
+#quran.quran-reading-mode .reader-controls {
+  margin-bottom: 14px;
+}
+
+#quran.quran-reading-mode .reader-layout {
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+}
+
 .panel-header {
   display: flex;
   justify-content: space-between;
@@ -892,6 +908,13 @@ body::after {
   scroll-behavior: smooth;
   border: 1px solid var(--glass-border);
   position: relative;
+}
+
+#quran.quran-reading-mode .arabic-panel,
+#quran.quran-reading-mode .translation-panel {
+  min-height: clamp(560px, calc(100vh - 330px), 860px);
+  max-height: none;
+  height: clamp(560px, calc(100vh - 330px), 860px);
 }
 
 .arabic-panel {
@@ -1075,6 +1098,47 @@ body::after {
   margin-top: 24px;
 }
 
+.hadith-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hadith-toolbar select {
+  flex: 1 1 260px;
+}
+
+.hadith-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.hadith-mode-btn {
+  min-width: 92px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--white-muted);
+  box-shadow: none;
+  border: 0;
+}
+
+.hadith-mode-btn.active {
+  background: linear-gradient(135deg, var(--gold-600), var(--gold-500));
+  color: #0f172a;
+  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.18);
+}
+
+.hadith-grid-arabic {
+  direction: rtl;
+}
+
 .hadith-card {
   padding: 28px;
   position: relative;
@@ -1112,12 +1176,49 @@ body::after {
   padding-right: 40px;
 }
 
+.hadith-card.is-arabic {
+  text-align: right;
+}
+
+.hadith-card.is-arabic::before {
+  right: auto;
+  left: 20px;
+}
+
+.hadith-card.is-arabic h4 {
+  padding-right: 0;
+  padding-left: 40px;
+}
+
 .hadith-card p {
   font-size: 0.9rem;
   color: rgba(226, 232, 240, 0.85);
   line-height: 1.8;
   position: relative;
   z-index: 1;
+}
+
+.hadith-narrator {
+  font-size: 0.85rem;
+  color: var(--gold-400);
+  margin-bottom: 8px;
+}
+
+.hadith-text {
+  white-space: pre-wrap;
+}
+
+.hadith-card.is-arabic .hadith-text,
+.hadith-modal.is-arabic .modal-body {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 2.1;
+}
+
+.hadith-grade {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--emerald-400);
 }
 
 .hadith-card .source {
@@ -1534,7 +1635,7 @@ body::after {
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 
 .quiz-header p {
@@ -1569,13 +1670,18 @@ body::after {
 
 .quiz-controls {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto;
+  grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(120px, auto) minmax(150px, auto);
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
+  align-items: stretch;
 }
 
 .quiz-panel {
-  padding: 28px;
+  padding: 18px;
+  min-height: min(620px, calc(100vh - 250px));
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto auto;
+  gap: 12px;
 }
 
 .quiz-meta {
@@ -1585,7 +1691,7 @@ body::after {
   flex-wrap: wrap;
   color: rgba(226, 232, 240, 0.75);
   font-size: 0.9rem;
-  margin-bottom: 14px;
+  margin-bottom: 0;
 }
 
 .quiz-progress {
@@ -1593,7 +1699,7 @@ body::after {
   border-radius: var(--radius-full);
   background: rgba(255, 255, 255, 0.06);
   overflow: hidden;
-  margin-bottom: 24px;
+  margin-bottom: 0;
 }
 
 #quizProgressFill {
@@ -1606,9 +1712,9 @@ body::after {
 
 #quizQuestion {
   color: #f8fafc;
-  font-size: 1.45rem;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
   line-height: 1.45;
-  margin-bottom: 18px;
+  margin-bottom: 0;
 }
 
 .quiz-options {
@@ -1618,8 +1724,8 @@ body::after {
 }
 
 .quiz-option {
-  min-height: 74px;
-  padding: 16px 18px;
+  min-height: 58px;
+  padding: 12px 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.04);
@@ -1654,10 +1760,12 @@ body::after {
 }
 
 .quiz-feedback {
-  min-height: 54px;
-  margin-top: 18px;
+  min-height: 46px;
+  max-height: 96px;
+  overflow-y: auto;
+  margin-top: 0;
   color: rgba(226, 232, 240, 0.86);
-  line-height: 1.7;
+  line-height: 1.55;
 }
 
 .quiz-feedback strong {
@@ -1665,14 +1773,22 @@ body::after {
 }
 
 .quiz-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 8px;
+  margin-top: 0;
+  position: sticky;
+  bottom: 12px;
+  padding-top: 10px;
+  background: linear-gradient(180deg, transparent, rgba(2, 6, 23, 0.92) 24%);
+  z-index: 2;
 }
 
 .quiz-actions button {
-  min-width: 120px;
+  min-width: 0;
+  width: 100%;
+  padding-inline: 10px;
+  white-space: normal;
 }
 
 .sound-toggle {
@@ -2080,6 +2196,16 @@ select option {
   .reader-layout {
     grid-template-columns: 1fr;
   }
+
+  #quran.quran-reading-mode .reader-layout {
+    grid-template-columns: 1fr;
+  }
+
+  #quran.quran-reading-mode .arabic-panel,
+  #quran.quran-reading-mode .translation-panel {
+    height: min(58vh, 620px);
+    min-height: 420px;
+  }
   
   .dashboard-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -2236,6 +2362,25 @@ select option {
   .quiz-options {
     grid-template-columns: 1fr;
   }
+
+  .quiz-panel {
+    min-height: auto;
+    display: block;
+  }
+
+  .quiz-options {
+    margin-top: 12px;
+  }
+
+  .quiz-feedback {
+    max-height: 140px;
+    margin-top: 12px;
+  }
+
+  .quiz-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 12px;
+  }
   
   .section-box {
     padding: 24px;
@@ -2250,10 +2395,29 @@ select option {
   .reader-controls {
     flex-direction: column;
   }
+
+  .hadith-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hadith-mode-toggle {
+    width: 100%;
+  }
+
+  .hadith-mode-btn {
+    flex: 1;
+  }
   
   .reader-controls select,
-  .reader-controls button {
+  .reader-controls button,
+  .hadith-toolbar select,
+  .hadith-toolbar button {
     width: 100%;
+  }
+
+  .quiz-actions {
+    grid-template-columns: 1fr;
   }
   
   .tasbih-box {
