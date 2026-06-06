@@ -1,14 +1,14 @@
 const CACHE_NAME = 'deen-guide-v2';
 const APP_SHELL = [
-  './',
-  './index.html',
-  './index.css',
-  './index.js',
-  './manifest.webmanifest',
-  './icons/app-icon-192.png',
-  './icons/app-icon-512.png',
-  './icons/app-icon.svg',
-  './icons/maskable-icon.svg'
+  '/Deen_Guide/',
+  '/Deen_Guide/index.html',
+  '/Deen_Guide/index.css',
+  '/Deen_Guide/index.js',
+  '/Deen_Guide/manifest.webmanifest',
+  '/Deen_Guide/icons/app-icon-192.png',
+  '/Deen_Guide/icons/app-icon-512.png',
+  '/Deen_Guide/icons/app-icon.svg',
+  '/Deen_Guide/icons/maskable-icon.svg'
 ];
 
 self.addEventListener('install', (event) => {
