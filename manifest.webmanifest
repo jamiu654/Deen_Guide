@@ -2,7 +2,7 @@
   "name": "Deen_Guide - Islamic Companion",
   "short_name": "Deen_Guide",
   "description": "An Islamic companion for Quran reading, hadith, prayer times, dhikr, bookmarks, and quiz learning.",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "fullscreen", "minimal-ui"],

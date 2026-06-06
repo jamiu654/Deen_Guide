@@ -18,6 +18,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="index.css">
 <base target="_blank">
+<!-- Optional: set backend URL when hosting frontend separately (e.g., https://api.example.com) -->
+<meta name="backend-url" content="">
 </head>
 <body>
 
@@ -53,6 +55,12 @@
       <button class="secondary" data-page="contact">Contact</button>
     </div>
   </header>
+
+  <!-- iOS install hint (shown only on iOS Safari) -->
+  <div id="iosInstallHint" class="ios-install-hint" style="display:none;position:fixed;left:12px;right:12px;bottom:18px;background:rgba(13,35,24,0.95);color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,4,0.6);z-index:9999;font-size:0.95rem;">
+    To install this app on your iPhone or iPad: tap <strong>Share</strong> then choose <strong>Add to Home Screen</strong>.
+    <button id="iosInstallDismiss" class="secondary" style="float:right;margin-left:12px;background:transparent;border:1px solid rgba(255,255,255,.08);color:#fff;padding:6px 10px;border-radius:8px;">Dismiss</button>
+  </div>
 
   <!-- DASHBOARD -->
   <section class="page active" id="dashboard">

@@ -51,6 +51,10 @@ const API = {
   ]
 };
 
+// Backend URL configuration: reads <meta name="backend-url" content="..."> in index.html
+const META_BACKEND = document.querySelector('meta[name="backend-url"]')?.content || '';
+const BACKEND_URL = (typeof META_BACKEND === 'string' && META_BACKEND.trim()) ? META_BACKEND.trim().replace(/\/+$/, '') : '';
+
 const Sound = {
   context: null,
   gainNode: null,
@@ -634,12 +638,35 @@ function initSoundToggle() {
 
 function initStoryReadMore() {
   document.querySelectorAll('.story-toggle').forEach(button => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', async () => {
       const card = button.closest('.story-card');
       if (!card) return;
 
       const expanded = card.classList.toggle('expanded');
       button.textContent = expanded ? 'Show less' : 'Read more';
+
+      const moreEl = card.querySelector('.story-more');
+      if (expanded && moreEl && !card.dataset.generated) {
+        const title = card.querySelector('h3')?.textContent?.trim() || '';
+        moreEl.textContent = 'Loading full story...';
+        try {
+          const url = BACKEND_URL ? `${BACKEND_URL}/story` : '/story';
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prophet: title })
+          });
+          const data = await res.json();
+          if (res.ok && data.story) {
+            moreEl.textContent = data.story;
+          } else {
+            moreEl.textContent = data.error || 'Failed to load story.';
+          }
+        } catch (e) {
+          moreEl.textContent = 'Network error loading story.';
+        }
+        card.dataset.generated = '1';
+      }
     });
   });
 }
@@ -2302,6 +2329,36 @@ function registerServiceWorker() {
   });
 }
 
+function isIos() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+
+function isInStandaloneMode() {
+  return ('standalone' in navigator) && navigator.standalone;
+}
+
+function initIosInstallHint() {
+  try {
+    const hint = document.getElementById('iosInstallHint');
+    const dismiss = document.getElementById('iosInstallDismiss');
+    if (!hint) return;
+
+    const dismissed = localStorage.getItem('iosInstallHintDismissed');
+    if (!dismissed && isIos() && !isInStandaloneMode()) {
+      hint.style.display = 'block';
+    }
+
+    if (dismiss) {
+      dismiss.addEventListener('click', () => {
+        hint.style.display = 'none';
+        try { localStorage.setItem('iosInstallHintDismissed', '1'); } catch (e) {}
+      });
+    }
+  } catch (e) {
+    // ignore
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 Noor app initializing...');
   
@@ -2323,6 +2380,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSoundToggle();
   initPWAInstall();
   registerServiceWorker();
+  initIosInstallHint();
   
   applyTheme();
   Sound.init();
