@@ -1,0 +1,55 @@
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.stat-card,
+.wide-card {
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-card h4 {
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fef3c7;
+  margin: 0 0 0.35rem;
+}
+
+.stat-card .value {
+  margin-top: 0.35rem;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.stat-card .status {
+  margin-top: 0.45rem;
+  color: #f8fafc;
+  opacity: 0.78;
+  font-size: 0.95rem;
+}
+
+.wide-card {
+  grid-column: 1 / -1;
+}
+
+.wide-card h3 {
+  margin: 0 0 0.35rem;
+  color: #fef3c7;
+}
+
+.hadith {
+  color: #e6eef0;
+  line-height: 1.7;
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}

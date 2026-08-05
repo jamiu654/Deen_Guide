@@ -1,0 +1,48 @@
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  font-family:
+    "Outfit",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background: #07151c;
+}
+
+body {
+  color: #f8fafc;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(16, 185, 129, 0.18),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(212, 175, 55, 0.16),
+      transparent 28%
+    ),
+    var(--dark-950, #07151c);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.chip {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fef3c7;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
