@@ -4,7 +4,7 @@ import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
 import QuranReader from "./components/QuranReader";
 import Hadith from "./components/Hadith";
-import Tasbih from "../../Tasbih";
+import Tasbih from "./Tasbih";
 import PrayerTimes from "./components/PrayerTimes";
 import Quiz from "./components/Quiz";
 import Chatbot from "./components/Chatbot";
