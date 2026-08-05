@@ -1,62 +1,80 @@
 # Deen_Guide
-A guide for your deen
+
+A guide for your deen, now converted to a React frontend and Django backend using API endpoints.
 
 ## Local development
 
-- Install dependencies:
+### Backend
+
+1. Change into the backend folder:
+
+```bash
+cd backend
+```
+
+2. Install Python dependencies:
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-- Set your OpenAI-compatible API key in the environment (example for PowerShell):
+3. Set your OpenAI API key in the environment:
 
 ```powershell
 $env:OPENAI_API_KEY = "your_api_key_here"
 ```
 
-- Run the Flask server:
+4. Run the Django development server:
 
 ```bash
-python index.py
+python manage.py runserver 8000
 ```
 
-The app provides a POST endpoint `/story` which accepts JSON `{ "prophet": "Yusuf" }` and returns a generated full story. Ensure your API key has access to the LLM you intend to use.
+5. The backend API will be available at `http://localhost:8000/api/chat/` and `http://localhost:8000/api/story/`.
 
-## Deploying the frontend to GitHub Pages
+### Frontend
 
-- GitHub Pages only serves static sites. The UI in this repo is static HTML/CSS/JS and can be hosted on Pages, but the Python backend (`index.py`) cannot run on Pages.
-- Recommended approach: host the frontend on GitHub Pages and host the backend (the `/story` API) on a separate service (Vercel Serverless, Render, Railway, Cloud Run, etc.).
+1. Change into the Vite frontend folder:
 
-Steps to deploy frontend to Pages:
-
-1. Commit and push your repo to GitHub (e.g. origin/main).
-2. In the repository Settings → Pages, set the source to the `main` branch and root (`/`).
-3. (Optional) Add a custom domain or use the default `https://<your-username>.github.io/<repo>/` URL.
-
-Configuring the frontend to call your backend:
-
-- After hosting your backend at e.g. `https://api.example.com`, edit `index.html` and set the `meta` tag:
-
-```html
-<meta name="backend-url" content="https://api.example.com">
+```bash
+cd frontend-vite
 ```
 
-- The frontend will then POST to `https://api.example.com/story` when users tap "Read more".
+2. Install Node dependencies:
 
-If you prefer an all-in-one hosted solution, consider deploying the whole project (frontend + Flask backend) to a platform that supports Python apps (Render, Railway, Fly.io) instead of GitHub Pages.
+```bash
+npm install
+```
 
-## Make the app installable on mobile (PWA)
+3. Start the Vite development server:
 
-This project already includes a Web App Manifest (`manifest.webmanifest`) and a Service Worker (`sw.js`). To ensure a smooth "installable" experience on phones:
+```bash
+npm run dev -- --host 127.0.0.1
+```
 
-- Host the frontend over HTTPS (GitHub Pages provides HTTPS).
-- Ensure `manifest.webmanifest` is reachable at the root and referenced from `index.html` (already present).
-- Use high-resolution icons and a maskable icon (the repo includes `icons/app-icon-192.png`, `icons/app-icon-512.png`, and `icons/maskable-icon.svg`).
-- For Android/Chrome: the browser will show an install prompt automatically when criteria are met; the app includes an install button that triggers the native prompt.
-- For iOS/Safari: add-to-home-screen is manual — open the site in Safari and choose Share → Add to Home Screen. The app includes an iOS hint banner to guide users.
+4. Open the app in your browser at `http://localhost:5173`.
 
-Tips:
-- Test using Lighthouse (in Chrome DevTools Audits) and ensure the PWA checklist passes.
-- If hosting on GitHub Pages, set the `meta[name="backend-url"]` in `index.html` to point to your running `/story` API.
-- For full offline behavior, verify your Service Worker is registered and caching the app shell (done by `sw.js`).
+### Environment configuration
+
+To use a different backend URL in the Vite app, create a `.env` file inside `frontend-vite/` with:
+
+```env
+VITE_API_BASE=http://localhost:8000
+```
+
+## Project structure
+
+- `backend/` - Django API service
+- `frontend-vite/` - active Vite React SPA
+- `frontend/` - legacy CRA copy kept for reference; the Vite app is now the main frontend path
+
+## Deployment notes
+
+- Deploy `backend/` as a Python app; use the provided `backend/Dockerfile`.
+- Deploy `frontend-vite/` as a static Vite site after building with `npm run build`.
+- Configure CORS or environment variables so the frontend app can access the Django backend.
+
+## API endpoints
+
+- `POST /api/chat/` expects `{ "message": "..." }` and returns `{ "reply": "..." }`
+- `POST /api/story/` expects `{ "prophet": "Yusuf" }` and returns `{ "story": "..." }`
