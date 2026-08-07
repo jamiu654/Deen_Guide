@@ -41,6 +41,7 @@ export default function Auth({ onAuthChange }) {
       const contentType = response.headers.get("content-type") || "";
       if (contentType.includes("application/json")) {
         data = await response.json();
+        console.log("REGISTER RESPONSE:", data);
       } else {
         const text = await response.text();
         throw new Error(
