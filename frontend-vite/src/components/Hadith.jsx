@@ -103,11 +103,12 @@ export default function Hadith() {
 
   function openModal(hadith) {
     const text = hadith.text || hadith.hadith || hadith.hadithtext || "";
+    const isArabic = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
     setModal({
       title: `Hadith #${hadith.hadithnumber || hadith.arabicnumber || "?"}`,
       narrator: hadith.narrator || "",
       text,
-      isArabic: language === "ara",
+      isArabic,
     });
   }
 
@@ -190,19 +191,23 @@ export default function Hadith() {
             </button>
           </div>
           <div
-            className="result"
+            className="result hadith-summary"
             style={{
               minHeight: 118,
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
+              gap: 6,
             }}
           >
-            <p style={{ margin: 0 }}>
-              Displaying {hadiths.length} hadiths from{" "}
+            <p className="hadith-count" style={{ margin: 0 }}>
+              Displaying <strong>{hadiths.length}</strong> hadiths from{" "}
               {language === "ara" ? "Arabic" : "English"} {collectionKey}.
             </p>
-            <p style={{ margin: "8px 0 0", color: "var(--white-muted)" }}>
+            <p
+              className="hadith-hint"
+              style={{ margin: "8px 0 0", color: "var(--white-muted)" }}
+            >
               Use the cards below to open a full hadith, bookmark your
               favorites, or page through the collection.
             </p>
@@ -248,6 +253,8 @@ export default function Hadith() {
                   hadith.hadith ||
                   hadith.hadithtext ||
                   "No text available";
+                const isArabic =
+                  /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
                 const shortText =
                   text.length > 280 ? `${text.substring(0, 280)}...` : text;
                 const narrator = hadith.narrator || "";
@@ -259,7 +266,7 @@ export default function Hadith() {
                 return (
                   <article
                     key={`${currentCollection}-${id}`}
-                    className={`hadith-card glass ${language === "ara" ? "is-arabic" : ""}`}
+                    className={`hadith-card glass ${isArabic ? "is-arabic" : ""}`}
                     style={{ position: "relative" }}
                   >
                     <button
@@ -378,7 +385,7 @@ export default function Hadith() {
             }}
           >
             <div
-              className="modal-content glass"
+              className={`modal-content glass ${modal.isArabic ? "is-arabic" : ""}`}
               style={{
                 width: "min(100%, 900px)",
                 maxHeight: "90vh",

@@ -141,9 +141,29 @@ function App() {
             <p>Faith, knowledge, prayer guidance, and calm daily reflection.</p>
           </div>
           <div className="header-actions">
+            <div className="header-badge">
+              <span className="badge-logo" aria-hidden>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 2C13.1046 2 14 2.89543 14 4v6c0 1.1046-.8954 2-2 2s-2-.8954-2-2V4c0-1.10457.8954-2 2-2zM6 8c0-2.2091 1.7909-4 4-4v2c-1.1046 0-2 .8954-2 2s.8954 2 2 2v2c-2.2091 0-4-1.7909-4-4zM18 8c0 2.2091-1.7909 4-4 4v-2c1.1046 0 2-.8954 2-2s-.8954-2-2-2V4c2.2091 0 4 1.7909 4 4z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+              <span className="badge-text">Islamic Companion</span>
+            </div>
+
             {authUser ? (
               <div className="account-box">
-                <span>Signed in as {authUser.username}</span>
+                <span className="account-username">
+                  Signed in as {authUser.username}
+                </span>
                 <button
                   type="button"
                   onClick={handleLogout}
@@ -157,11 +177,14 @@ function App() {
                 type="button"
                 onClick={() => setView("auth")}
                 className="button primary login-button"
+                aria-label="Sign in or Register"
               >
-                Sign in / Register
+                <span className="btn-icon" aria-hidden>
+                  👤
+                </span>
+                <span className="btn-text">Sign in / Register</span>
               </button>
             )}
-            <div className="header-badge">Islamic Companion</div>
           </div>
         </header>
 
