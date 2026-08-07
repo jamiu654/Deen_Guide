@@ -271,8 +271,11 @@ def auth_login(request):
 @csrf_exempt
 @require_POST
 def auth_register(request):
+    print("REGISTER CALLED")
+    print(request.body)
+
     try:
-        data = json.loads(request.body.decode('utf-8'))
+        data = json.loads(request.body.decode("utf-8"))
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
