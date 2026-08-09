@@ -347,6 +347,14 @@ def auth_register(request):
         )
 @csrf_exempt
 @require_POST
+def auth_logout(request):
+    if request.user.is_authenticated:
+        logout(request)
+    return JsonResponse({'authenticated': False})
+
+
+@csrf_exempt
+@require_POST
 def chat(request):
     try:
         data = json.loads(request.body.decode('utf-8'))
