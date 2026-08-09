@@ -13,7 +13,7 @@ import Settings from "./components/Settings";
 import Contact from "./components/Contact";
 import Auth from "./components/Auth";
 import Profile from "./components/Profile";
-import apiClient from "./apiClient";
+import apiClient from "../apiClient";
 
 const topLinks = [
   { key: "dashboard", label: "Home" },
@@ -62,27 +62,26 @@ function App() {
     return () => window.clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    async function loadAuthStatus() {
-      try {
-        const response = await fetch("/api/auth/status/", {
-          credentials: "include",
-        });
-        if (!response.ok) return;
-        const data = await response.json();
-        if (data.authenticated) {
-          setAuthUser({
-            username: data.username,
-            email: data.email || "",
-          });
-        }
-      } catch {
-        // ignore auth status failures for now
-      }
-    }
+useEffect(() => {
+  async function loadAuthStatus() {
+    try {
+      const data = await apiClient.fetchJson("/auth/status/");
 
-    loadAuthStatus();
-  }, []);
+      if (data.authenticated) {
+        setAuthUser({
+          username: data.username,
+          email: data.email || "",
+        });
+      }
+    } catch (error) {
+      // Ignore authentication status failures for now
+      console.error("Authentication status check failed:", error);
+    }
+  }
+
+  loadAuthStatus();
+}, []);
+       
 
   const handleNavigate = (nextView) => {
     setView(nextView);
