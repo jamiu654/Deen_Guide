@@ -1,6 +1,7 @@
 import { useState } from "react";
+import apiClient from "../apiClient";
 
-const BACKEND_AUTH = "/api/auth";
+const BACKEND_AUTH = `${apiClient.API_BASE}/auth`;
 
 export default function Auth({ onAuthChange }) {
   const [isRegister, setIsRegister] = useState(false);
