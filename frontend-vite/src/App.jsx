@@ -13,7 +13,7 @@ import Settings from "./components/Settings";
 import Contact from "./components/Contact";
 import Auth from "./components/Auth";
 import Profile from "./components/Profile";
-import apiClient from "../apiClient";
+import apiClient from "./apiClient";
 
 const topLinks = [
   { key: "dashboard", label: "Home" },
