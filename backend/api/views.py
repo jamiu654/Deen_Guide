@@ -267,47 +267,84 @@ def auth_login(request):
     login(request, user)
     return JsonResponse({'authenticated': True, 'username': user.username, 'email': user.email or ''})
 
-
 @csrf_exempt
 @require_POST
 def auth_register(request):
     print("REGISTER CALLED")
-    print(request.body)
+    print("REQUEST BODY:", request.body)
 
     try:
         data = json.loads(request.body.decode("utf-8"))
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
-    username = (data.get('username') or '').strip()
-    email = (data.get('email') or '').strip()
-    password = (data.get('password') or '').strip()
-    password_confirm = (data.get('passwordConfirm') or '').strip()
+        username = (data.get("username") or "").strip()
+        email = (data.get("email") or "").strip()
+        password = (data.get("password") or "").strip()
+        password_confirm = (data.get("passwordConfirm") or "").strip()
 
-    if not username or not email or not password or not password_confirm:
-        return JsonResponse({'error': 'Username, email, password, and password confirmation are required.'}, status=400)
-    if password != password_confirm:
-        return JsonResponse({'error': 'Passwords do not match.'}, status=400)
-    if len(password) < 8:
-        return JsonResponse({'error': 'Password must be at least 8 characters.'}, status=400)
-    if User.objects.filter(username=username).exists():
-        return JsonResponse({'error': 'Username is already taken.'}, status=409)
-    if User.objects.filter(email=email).exists():
-        return JsonResponse({'error': 'Email is already in use.'}, status=409)
+        if not username or not email or not password or not password_confirm:
+            return JsonResponse(
+                {
+                    "error": "Username, email, password, and password confirmation are required."
+                },
+                status=400,
+            )
 
-    user = User.objects.create_user(username=username, email=email, password=password)
-    login(request, user)
-    return JsonResponse({'authenticated': True, 'username': user.username, 'email': user.email})
+        if password != password_confirm:
+            return JsonResponse(
+                {"error": "Passwords do not match."},
+                status=400,
+            )
 
+        if len(password) < 8:
+            return JsonResponse(
+                {"error": "Password must be at least 8 characters."},
+                status=400,
+            )
 
-@csrf_exempt
-@require_POST
-def auth_logout(request):
-    if request.user.is_authenticated:
-        logout(request)
-    return JsonResponse({'authenticated': False})
+        if User.objects.filter(username=username).exists():
+            return JsonResponse(
+                {"error": "Username is already taken."},
+                status=409,
+            )
 
+        if User.objects.filter(email=email).exists():
+            return JsonResponse(
+                {"error": "Email is already in use."},
+                status=409,
+            )
 
+        print("ABOUT TO CREATE USER")
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+        )
+
+        print("USER CREATED:", user.username)
+
+        login(request, user)
+
+        print("LOGIN SUCCESSFUL")
+
+        return JsonResponse(
+            {
+                "authenticated": True,
+                "username": user.username,
+                "email": user.email,
+            }
+        )
+
+    except Exception as exc:
+        import traceback
+
+        print("REGISTER ERROR:", repr(exc))
+        traceback.print_exc()
+
+        return JsonResponse(
+            {"error": f"Registration failed: {str(exc)}"},
+            status=500,
+        )
 @csrf_exempt
 @require_POST
 def chat(request):
