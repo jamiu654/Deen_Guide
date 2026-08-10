@@ -5,8 +5,16 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/api": "http://127.0.0.1:8000",
-      "/admin": "http://127.0.0.1:8000",
+      "/api": {
+        target: "https://deen-guide-backend.onrender.com",
+        changeOrigin: true,
+        secure: true,
+      },
+      "/admin": {
+        target: "https://deen-guide-backend.onrender.com",
+        changeOrigin: true,
+        secure: true,
+      },
     },
   },
-});
+});cd
