@@ -11,6 +11,10 @@ from io import BytesIO
 from django.http import FileResponse, JsonResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
+from django.contrib.auth.decorators import user_passes_test
+from django.db.models import Count
+from django.utils import timezone
+from datetime import timedelta
 
 try:
     from openai import OpenAI
@@ -425,3 +429,37 @@ def story(request):
         return JsonResponse({'story': story_text})
     except Exception as exc:
         return JsonResponse({'error': str(exc)}, status=500)
+@require_GET
+def admin_stats(request):
+    if not request.user.is_authenticated or not request.user.is_staff:
+        return JsonResponse(
+            {"error": "Admin access required."},
+            status=403
+        )
+
+    now = timezone.now()
+    today = now.date()
+
+    start_of_week = today - timedelta(days=today.weekday())
+    start_of_month = today.replace(day=1)
+
+    total_users = User.objects.count()
+
+    users_today = User.objects.filter(
+        date_joined__date=today
+    ).count()
+
+    users_this_week = User.objects.filter(
+        date_joined__date__gte=start_of_week
+    ).count()
+
+    users_this_month = User.objects.filter(
+        date_joined__date__gte=start_of_month
+    ).count()
+
+    return JsonResponse({
+        "total_users": total_users,
+        "users_today": users_today,
+        "users_this_week": users_this_week,
+        "users_this_month": users_this_month,
+    })

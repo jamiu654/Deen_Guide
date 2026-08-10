@@ -16,4 +16,5 @@ urlpatterns = [
     path('auth/logout/', views.auth_logout, name='auth-logout'),
     path('chat/', views.chat, name='chat'),
     path('story/', views.story, name='story'),
+    path('admin/stats/', views.admin_stats, name='admin-stats'),
 ]
