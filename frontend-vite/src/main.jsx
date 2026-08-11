@@ -5,7 +5,10 @@ import "./noor.css";
 import App from "./App";
 import { initAnalytics } from "./analytics";
 
+initAnalytics();
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
+
 root.render(
   <StrictMode>
     <App />
