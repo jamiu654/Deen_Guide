@@ -24,6 +24,16 @@ function normalizeHadithPayload(data) {
   return [];
 }
 
+function normalizeForSearch(value) {
+  return String(value ?? "")
+    .normalize("NFKD")
+    .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "")
+    .replace(/[\p{P}\p{S}]/gu, " ")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export default function Hadith() {
   const [language, setLanguage] = useState(
     () => localStorage.getItem("deenHadithLanguage") || "eng",
@@ -43,8 +53,12 @@ export default function Hadith() {
   );
 
   const filteredHadiths = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    if (!term) return hadiths;
+    const terms = searchTerm
+      .split(/\s+/)
+      .map((term) => normalizeForSearch(term))
+      .filter(Boolean);
+
+    if (!terms.length) return hadiths;
 
     return hadiths.filter((hadith) => {
       const entryText = [
@@ -56,10 +70,11 @@ export default function Hadith() {
         hadith.grades?.join(" "),
       ]
         .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+        .join(" ");
 
-      return entryText.includes(term);
+      const normalizedEntry = normalizeForSearch(entryText);
+
+      return terms.every((term) => normalizedEntry.includes(term));
     });
   }, [hadiths, searchTerm]);
 
