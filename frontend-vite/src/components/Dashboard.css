@@ -46,6 +46,8 @@
   color: #e6eef0;
   line-height: 1.7;
   margin: 0;
+  font-size: 1.04rem;
+  font-style: italic;
 }
 
 @media (max-width: 600px) {

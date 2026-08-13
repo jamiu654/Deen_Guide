@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import "./Tasbih.css";
+import { playBeadTapSound } from "./bookPageSound";
 
 const DHIKR_OPTIONS = [
   { value: "subhanallah", label: "SubhanAllah", limit: 33 },
@@ -9,16 +11,54 @@ const DHIKR_OPTIONS = [
   { value: "salawaat", label: "Durud / Salawat", limit: 100 },
 ];
 
+// Generate beads display - show the next available beads to tap
+function generateBeads(count, limit) {
+  const beads = [];
+  const cyclePos = count % limit;
+
+  // Show 10 beads at a time for tapping
+  const beadsToShow = 10;
+  const startIndex = cyclePos;
+
+  for (let i = 0; i < beadsToShow; i++) {
+    const beadIndex = startIndex + i;
+    const isCountedInThisCycle = beadIndex < cyclePos;
+    const isSeparator = (beadIndex + 1) % 10 === 0;
+
+    beads.push({
+      id: beadIndex,
+      index: i,
+      isSeparator,
+      isCounted: false,
+      isTapped: false,
+    });
+  }
+
+  // Add counted beads that have moved
+  const countedBeads = [];
+  for (let i = 0; i < cyclePos % beadsToShow; i++) {
+    countedBeads.push({
+      id: `counted-${i}`,
+      index: i,
+      isCounted: true,
+      isSeparator: false,
+    });
+  }
+
+  return { activeBeads: beads, countedBeads };
+}
+
 export default function Tasbih() {
   const [count, setCount] = useState(() => {
     const saved = localStorage.getItem("tasbih");
     return saved !== null ? parseInt(saved, 10) || 0 : 0;
   });
   const [dhikr, setDhikr] = useState("subhanallah");
-  const [isPulsing, setIsPulsing] = useState(false);
+  const [tappedBead, setTappedBead] = useState(null);
 
   useEffect(() => {
     localStorage.setItem("tasbih", String(count));
+    window.dispatchEvent(new Event("tasbihUpdated"));
   }, [count]);
 
   const currentLimit = useMemo(
@@ -28,13 +68,16 @@ export default function Tasbih() {
 
   const cycleCount = count % currentLimit;
   const cyclesComplete = Math.floor(count / currentLimit);
-  const progress = currentLimit > 0 ? (cycleCount / currentLimit) * 100 : 0;
 
-  const handleTap = () => {
+  const { activeBeads, countedBeads } = generateBeads(count, currentLimit);
+
+  const handleBeadTap = (beadIndex) => {
+    setTappedBead(beadIndex);
     setCount((current) => current + 1);
-    setIsPulsing(true);
-    window.setTimeout(() => setIsPulsing(false), 260);
-    if (navigator.vibrate) navigator.vibrate(12);
+    playBeadTapSound();
+    if (navigator.vibrate) navigator.vibrate([10, 30, 10]);
+
+    setTimeout(() => setTappedBead(null), 500);
   };
 
   const resetTasbih = () => {
@@ -50,39 +93,15 @@ export default function Tasbih() {
   return (
     <section className="page card glass" id="tasbih">
       <div className="section-box glass">
-        <div
-          style={{
-            marginBottom: 20,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 16,
-          }}
-        >
+        <div className="tasbih-header">
           <div>
             <h2 className="section-title">📿 Digital Tasbih</h2>
-            <p
-              style={{
-                color: "var(--white-muted)",
-                maxWidth: 760,
-                lineHeight: 1.7,
-              }}
-            >
-              Count your dhikr, switch between common remembrances, and see how
-              many cycles you have completed.
+            <p className="tasbih-subtitle">
+              Tap the beads to count your dhikr, just like a real tasbih
             </p>
           </div>
-          <div style={{ minWidth: 220 }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: 10,
-                color: "var(--white-muted)",
-              }}
-            >
-              Choose remembrance
-            </label>
+          <div className="tasbih-selector">
+            <label>Choose remembrance</label>
             <select
               value={dhikr}
               onChange={(event) => setDhikr(event.target.value)}
@@ -96,94 +115,68 @@ export default function Tasbih() {
           </div>
         </div>
 
-        <div
-          className="result"
-          style={{ display: "grid", gap: 18, padding: 24 }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: 16,
-            }}
-          >
-            <div>
-              <div style={{ color: "var(--white-muted)", marginBottom: 6 }}>
-                Current dhikr
-              </div>
-              <strong>
-                {DHIKR_OPTIONS.find((item) => item.value === dhikr)?.label}
-              </strong>
-            </div>
-            <div>
-              <div style={{ color: "var(--white-muted)", marginBottom: 6 }}>
-                Cycle progress
-              </div>
-              <strong>
-                {cycleCount} / {currentLimit}
-              </strong>
-            </div>
-            <div>
-              <div style={{ color: "var(--white-muted)", marginBottom: 6 }}>
-                Total count
-              </div>
-              <strong>{count}</strong>
-            </div>
+        {/* Tasbih Display */}
+        <div className="tasbih-display">
+          {/* Counted beads (moved to the side) */}
+          <div className="beads-counted">
+            {countedBeads.map((bead) => (
+              <div key={bead.id} className="bead bead-counted"></div>
+            ))}
           </div>
 
-          <div
-            style={{
-              background: "rgba(255,255,255,0.06)",
-              borderRadius: 9999,
-              overflow: "hidden",
-              height: 16,
-            }}
-          >
-            <div
-              style={{
-                width: `${progress}%`,
-                height: "100%",
-                background: "linear-gradient(90deg, #d4af37, #10b981)",
-              }}
-            />
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr auto",
-              gap: 14,
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <div style={{ color: "var(--white-muted)", marginBottom: 6 }}>
-                Complete cycles
-              </div>
-              <strong>{cyclesComplete}</strong>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <button
-                type="button"
-                onClick={handleTap}
-                style={{ minWidth: 160 }}
-                className={isPulsing ? "pulse" : ""}
-              >
-                Count Dhikr
-              </button>
+          {/* String line */}
+          <div className="string-line">
+            {/* Active beads to tap */}
+            <div className="beads-container">
+              {activeBeads.map((bead) => (
+                <button
+                  key={bead.id}
+                  type="button"
+                  className={`bead ${bead.isSeparator ? "separator" : ""} ${
+                    tappedBead === bead.index ? "tapped" : ""
+                  }`}
+                  onClick={() => handleBeadTap(bead.index)}
+                  aria-label={`Bead ${bead.index + 1}`}
+                />
+              ))}
             </div>
           </div>
+        </div>
 
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <button type="button" onClick={resetTasbih}>
-              Reset
-            </button>
-            <button type="button" className="danger" onClick={clearTasbih}>
-              Clear All
-            </button>
+        {/* Stats */}
+        <div className="tasbih-stats">
+          <div className="stat-item">
+            <span className="stat-label">Current cycle</span>
+            <span className="stat-value">
+              {cycleCount} / {currentLimit}
+            </span>
           </div>
+          <div className="stat-item">
+            <span className="stat-label">Total count</span>
+            <span className="stat-value">{count}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Cycles complete</span>
+            <span className="stat-value">{cyclesComplete}</span>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="tasbih-progress">
+          <div
+            className="progress-fill"
+            style={{ width: `${(cycleCount / currentLimit) * 100}%` }}
+          ></div>
+        </div>
+
+        {/* Controls */}
+        <div className="tasbih-controls">
+          <button type="button" onClick={resetTasbih} className="secondary">
+            Reset Cycle
+          </button>
+          <button type="button" onClick={clearTasbih} className="danger">
+            Clear All
+          </button>
         </div>
       </div>
     </section>

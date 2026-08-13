@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CHARITY_QUESTION_BANK } from "../data/charityQuestionBank";
+import { FAMILY_QUESTION_BANK } from "../data/familyQuestionBank";
+import { FAITH_QUESTION_BANK } from "../data/faithQuestionBank";
 import { FATWA_QUESTION_BANK } from "../data/fatwaQuestionBank";
+import { PILLARS_QUESTION_BANK } from "../data/pillarsQuestionBank";
 import { PROPHETS_QUESTION_BANK } from "../data/prophetsQuestionBank";
+import { QURAN_QUESTION_BANK } from "../data/quranQuestionBank";
+import { RAMADAN_QUESTION_BANK } from "../data/ramadanQuestionBank";
+import { SALAH_QUESTION_BANK } from "../data/salahQuestionBank";
+import { SEERAH_QUESTION_BANK } from "../data/seerahQuestionBank";
 
 const LEVEL_DIFFICULTIES = {
   1: ["easy"],
@@ -118,59 +126,74 @@ const BASE_QUESTIONS = [
     explanation:
       "The Prophet Muhammad was born in Makkah, the city of the Kaaba and the beginning of his mission.",
   },
+  ...CHARITY_QUESTION_BANK,
+  ...FAITH_QUESTION_BANK,
+  ...FAMILY_QUESTION_BANK,
   ...FATWA_QUESTION_BANK,
+  ...PILLARS_QUESTION_BANK,
   ...PROPHETS_QUESTION_BANK,
+  ...QURAN_QUESTION_BANK,
+  ...RAMADAN_QUESTION_BANK,
+  ...SALAH_QUESTION_BANK,
+  ...SEERAH_QUESTION_BANK,
 ];
 
 function buildQuizBank() {
-  const totalQuestions = 12000;
-  const bank = [];
+  // Remove duplicates by question text while preserving all question data
   const seenQuestions = new Set();
-  let index = 0;
+  const uniqueBank = [];
 
-  while (bank.length < totalQuestions) {
-    const base = BASE_QUESTIONS[index % BASE_QUESTIONS.length];
-    const repeatIndex = Math.floor(index / BASE_QUESTIONS.length);
-    const variantText =
-      repeatIndex === 0
-        ? base.question
-        : `${base.question} (${repeatIndex + 1})`;
-
-    if (seenQuestions.has(variantText)) {
-      index += 1;
-      continue;
+  for (const question of BASE_QUESTIONS) {
+    if (!seenQuestions.has(question.question)) {
+      seenQuestions.add(question.question);
+      uniqueBank.push({
+        id: uniqueBank.length + 1,
+        category: question.category,
+        difficulty: question.difficulty,
+        question: question.question,
+        options: [...question.options],
+        answer: question.answer,
+        explanation: question.explanation,
+      });
     }
-
-    seenQuestions.add(variantText);
-    bank.push({
-      id: bank.length + 1,
-      category: base.category,
-      difficulty: base.difficulty,
-      question: variantText,
-      options: [...base.options],
-      answer: base.answer,
-      explanation: base.explanation,
-    });
-
-    index += 1;
   }
 
-  return bank;
+  return uniqueBank;
 }
 
 const QUIZ_BANK = buildQuizBank();
 const ALL_CATEGORIES = [
   ...new Set(
-    [...BASE_QUESTIONS, ...FATWA_QUESTION_BANK, ...PROPHETS_QUESTION_BANK].map(
-      (item) => item.category,
-    ),
+    [
+      ...BASE_QUESTIONS,
+      ...CHARITY_QUESTION_BANK,
+      ...FAITH_QUESTION_BANK,
+      ...FAMILY_QUESTION_BANK,
+      ...FATWA_QUESTION_BANK,
+      ...PILLARS_QUESTION_BANK,
+      ...PROPHETS_QUESTION_BANK,
+      ...QURAN_QUESTION_BANK,
+      ...RAMADAN_QUESTION_BANK,
+      ...SALAH_QUESTION_BANK,
+      ...SEERAH_QUESTION_BANK,
+    ].map((item) => item.category),
   ),
 ];
 const ALL_DIFFICULTIES = [
   ...new Set(
-    [...BASE_QUESTIONS, ...FATWA_QUESTION_BANK, ...PROPHETS_QUESTION_BANK].map(
-      (item) => item.difficulty,
-    ),
+    [
+      ...BASE_QUESTIONS,
+      ...CHARITY_QUESTION_BANK,
+      ...FAITH_QUESTION_BANK,
+      ...FAMILY_QUESTION_BANK,
+      ...FATWA_QUESTION_BANK,
+      ...PILLARS_QUESTION_BANK,
+      ...PROPHETS_QUESTION_BANK,
+      ...QURAN_QUESTION_BANK,
+      ...RAMADAN_QUESTION_BANK,
+      ...SALAH_QUESTION_BANK,
+      ...SEERAH_QUESTION_BANK,
+    ].map((item) => item.difficulty),
   ),
 ];
 
@@ -190,6 +213,12 @@ export default function Quiz() {
   const [hintEliminated, setHintEliminated] = useState(null);
   const [category, setCategory] = useState("all");
   const [difficulty, setDifficulty] = useState("all");
+  const [numQuestions, setNumQuestions] = useState(() =>
+    parseInt(localStorage.getItem("quizNumQuestions") || "25", 10),
+  );
+  const [timeLimit, setTimeLimit] = useState(() =>
+    parseInt(localStorage.getItem("quizTimeLimit") || "15", 10),
+  );
   const [sessionQuestions, setSessionQuestions] = useState([]);
   const [missedQuestions, setMissedQuestions] = useState([]);
   const [celebrationVisible, setCelebrationVisible] = useState(false);
@@ -319,7 +348,7 @@ export default function Quiz() {
     const pool = [...filteredQuestions];
     const selectedRound = [];
     const seenIds = new Set();
-    const targetCount = Math.min(25, pool.length);
+    const targetCount = Math.min(numQuestions, pool.length);
 
     while (selectedRound.length < targetCount) {
       const randomIndex = Math.floor(Math.random() * pool.length);
@@ -342,7 +371,7 @@ export default function Quiz() {
     setMissedQuestions([]);
     setCelebrationVisible(false);
     setHintsLeft(2);
-    setTimeLeft(15);
+    setTimeLeft(timeLimit);
   };
 
   const finishQuiz = () => {
@@ -525,6 +554,38 @@ export default function Quiz() {
               {level.charAt(0).toUpperCase() + level.slice(1)}
             </option>
           ))}
+        </select>
+        <select
+          id="quizNumQuestions"
+          value={numQuestions}
+          onChange={(event) => {
+            const value = parseInt(event.target.value, 10);
+            setNumQuestions(value);
+            localStorage.setItem("quizNumQuestions", String(value));
+          }}
+          disabled={started}
+        >
+          <option value={10}>10 Questions</option>
+          <option value={15}>15 Questions</option>
+          <option value={20}>20 Questions</option>
+          <option value={25}>25 Questions</option>
+          <option value={30}>30 Questions</option>
+        </select>
+        <select
+          id="quizTimeLimit"
+          value={timeLimit}
+          onChange={(event) => {
+            const value = parseInt(event.target.value, 10);
+            setTimeLimit(value);
+            localStorage.setItem("quizTimeLimit", String(value));
+          }}
+          disabled={started}
+        >
+          <option value={5}>5 seconds</option>
+          <option value={10}>10 seconds</option>
+          <option value={15}>15 seconds</option>
+          <option value={20}>20 seconds</option>
+          <option value={30}>30 seconds</option>
         </select>
         <button id="startQuizBtn" onClick={startQuiz}>
           {started ? "Restart" : "Start Quiz"}

@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import "./Dashboard.css";
 import apiClient from "../apiClient";
+import { getTasbihCount } from "../bookmarkStorage";
+
+const DEFAULT_DAILY_HADITH = {
+  text: "The best among you are those with the best manners and character.",
+  narrator: "Sahih al-Bukhari",
+};
 
 function parsePrayerTime(timeText) {
   const match = String(timeText || "").match(/(\d{1,2}):(\d{2})/);
@@ -33,6 +39,23 @@ export default function Dashboard() {
   const [lastReadLabel, setLastReadLabel] = useState("No recent read");
   const [nextPrayerLabel, setNextPrayerLabel] = useState("--:--");
   const [nextPrayerStatus, setNextPrayerStatus] = useState("Locating...");
+  const [dailyHadith, setDailyHadith] = useState(DEFAULT_DAILY_HADITH);
+  const [tasbihCount, setTasbihCount] = useState(0);
+
+  useEffect(() => {
+    setTasbihCount(getTasbihCount());
+
+    const handleStorageChange = () => {
+      setTasbihCount(getTasbihCount());
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("tasbihUpdated", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("tasbihUpdated", handleStorageChange);
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -42,6 +65,51 @@ export default function Dashboard() {
         setLastReadLabel(`Surah ${surah}${verse ? ` · Verse ${verse}` : ""}`);
       }
     } catch {}
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadDailyHadith() {
+      try {
+        const data = await apiClient.fetchJson(
+          "/hadith/?collection=bukhari&language=eng",
+        );
+        const items = Array.isArray(data?.hadiths)
+          ? data.hadiths.filter(
+              (item) => item && (item.text || item.hadith || item.hadithtext),
+            )
+          : [];
+
+        if (!items.length) {
+          setDailyHadith(DEFAULT_DAILY_HADITH);
+          return;
+        }
+
+        const today = new Date();
+        const seedString = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+        let hash = 0;
+        for (const char of seedString) {
+          hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+        }
+        const chosenIndex = hash % items.length;
+        const chosen = items[chosenIndex];
+        const hadithText =
+          chosen.text || chosen.hadith || chosen.hadithtext || "";
+
+        setDailyHadith({
+          text: hadithText,
+          narrator: chosen.narrator || "Sahih al-Bukhari",
+        });
+      } catch {
+        setDailyHadith(DEFAULT_DAILY_HADITH);
+      }
+    }
+
+    void loadDailyHadith();
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -133,7 +201,10 @@ export default function Dashboard() {
   return (
     <div className="dashboard-grid">
       <StatCard title="LAST READ" value={lastReadLabel} />
-      <StatCard title="TASBIH COUNT" value="0 total dhikr today 📿" />
+      <StatCard
+        title="TASBIH COUNT"
+        value={`${tasbihCount} total dhikr today 📿`}
+      />
       <StatCard title="NEXT PRAYER" value={nextPrayerLabel}>
         <div className="status">{nextPrayerStatus}</div>
       </StatCard>
@@ -141,8 +212,7 @@ export default function Dashboard() {
       <div className="wide-card">
         <h3>DAILY HADITH</h3>
         <p className="hadith">
-          “The best among you are those with the best manners and character.” ·
-          Sahih al-Bukhari
+          “{dailyHadith.text}” · {dailyHadith.narrator}
         </p>
       </div>
     </div>

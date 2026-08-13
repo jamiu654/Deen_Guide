@@ -62,26 +62,25 @@ function App() {
     return () => window.clearInterval(timer);
   }, []);
 
-useEffect(() => {
-  async function loadAuthStatus() {
-    try {
-      const data = await apiClient.fetchJson("/auth/status/");
+  useEffect(() => {
+    async function loadAuthStatus() {
+      try {
+        const data = await apiClient.fetchJson("/auth/status/");
 
-      if (data.authenticated) {
-        setAuthUser({
-          username: data.username,
-          email: data.email || "",
-        });
+        if (data.authenticated) {
+          setAuthUser({
+            username: data.username,
+            email: data.email || "",
+          });
+        }
+      } catch (error) {
+        // Ignore authentication status failures for now
+        console.error("Authentication status check failed:", error);
       }
-    } catch (error) {
-      // Ignore authentication status failures for now
-      console.error("Authentication status check failed:", error);
     }
-  }
 
-  loadAuthStatus();
-}, []);
-       
+    loadAuthStatus();
+  }, []);
 
   const handleNavigate = (nextView) => {
     setView(nextView);
@@ -140,29 +139,8 @@ useEffect(() => {
             <p>Faith, knowledge, prayer guidance, and calm daily reflection.</p>
           </div>
           <div className="header-actions">
-            <div className="header-badge">
-              <span className="badge-logo" aria-hidden>
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M12 2C13.1046 2 14 2.89543 14 4v6c0 1.1046-.8954 2-2 2s-2-.8954-2-2V4c0-1.10457.8954-2 2-2zM6 8c0-2.2091 1.7909-4 4-4v2c-1.1046 0-2 .8954-2 2s.8954 2 2 2v2c-2.2091 0-4-1.7909-4-4zM18 8c0 2.2091-1.7909 4-4 4v-2c1.1046 0 2-.8954 2-2s-.8954-2-2-2V4c2.2091 0 4 1.7909 4 4z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </span>
-              <span className="badge-text">Islamic Companion</span>
-            </div>
-
             {authUser ? (
               <div className="account-box">
-                <span className="account-username">
-                  Signed in as {authUser.username}
-                </span>
                 <button
                   type="button"
                   onClick={handleLogout}
@@ -223,7 +201,11 @@ useEffect(() => {
                 <section className="card hero-card">
                   <div>
                     <p className="eyebrow">Assalamu Alaikum</p>
-                    <h2>Welcome back to your daily companion.</h2>
+                    <h2>
+                      {authUser
+                        ? `Welcome back to your daily companion, ${authUser.username}.`
+                        : "Welcome back to your daily companion."}
+                    </h2>
                     <p className="hero-sub">
                       Open Quran, check prayer time, read hadith, or ask the
                       assistant for guidance.

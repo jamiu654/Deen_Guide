@@ -126,51 +126,10 @@ body,
   color: #cbd5e1;
 }
 
-.header-badge {
-  padding: 0.6rem 0.9rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #cbd5e1;
-  font-weight: 600;
-}
-
 .header-actions {
   display: flex;
   gap: 12px;
   align-items: center;
-}
-
-.header-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0.45rem 0.8rem;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.03),
-    rgba(255, 255, 255, 0.02)
-  );
-  border: 1px solid rgba(148, 163, 184, 0.08);
-  color: #e2e8f0;
-  font-weight: 700;
-  font-size: 0.92rem;
-}
-
-.header-badge .badge-logo {
-  display: inline-flex;
-  width: 20px;
-  height: 20px;
-  align-items: center;
-  justify-content: center;
-  background: rgba(148, 163, 184, 0.14);
-  border-radius: 999px;
-  padding: 4px;
-  color: #f8fafc;
-}
-
-.header-badge .badge-text {
-  display: inline-block;
 }
 
 .account-box {
@@ -861,7 +820,11 @@ button.login-button {
   margin: 0.3rem 0 0.9rem;
   padding: 0.55rem 0.9rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(250, 204, 21, 0.18), rgba(34, 197, 94, 0.2));
+  background: linear-gradient(
+    135deg,
+    rgba(250, 204, 21, 0.18),
+    rgba(34, 197, 94, 0.2)
+  );
   border: 1px solid rgba(250, 204, 21, 0.45);
   color: #fef3c7;
   font-size: 0.75rem;
@@ -883,7 +846,12 @@ button.login-button {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: radial-gradient(circle, #fef3c7 0%, #34d399 50%, transparent 100%);
+  background: radial-gradient(
+    circle,
+    #fef3c7 0%,
+    #34d399 50%,
+    transparent 100%
+  );
   animation: sparkRise 1.6s ease-out infinite;
   opacity: 0.9;
 }
@@ -893,7 +861,9 @@ button.login-button {
     transform: translate(0, 0) scale(0.6);
     opacity: 0;
   }
-  15% { opacity: 1; }
+  15% {
+    opacity: 1;
+  }
   100% {
     transform: translate(var(--drift-x, 0px), -180px) scale(1.2);
     opacity: 0;
@@ -1149,6 +1119,38 @@ button.login-button {
     padding: 1rem 1rem;
   }
 
+  .app-header {
+    gap: 0.5rem;
+  }
+
+  .header-actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+
+  .button.primary.login-button {
+    min-width: 0;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .login-button {
+    padding: 0.45rem 0.75rem;
+    min-width: 0;
+    border-radius: 12px;
+    white-space: nowrap;
+  }
+
+  .login-button .btn-text {
+    display: inline-block;
+    white-space: nowrap;
+  }
+
   .top-links button,
   .top-menu-toggle {
     padding: 0.85rem 1rem;
@@ -1156,28 +1158,6 @@ button.login-button {
 
   .hero-clock {
     font-size: 1.4rem;
-  }
-
-  .header-actions {
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .button.primary.login-button {
-    min-width: 120px;
-    padding: 0.6rem 0.9rem;
-    font-size: 0.95rem;
-  }
-
-  .login-button {
-    padding: 0.45rem 0.6rem;
-    min-width: 44px;
-    border-radius: 12px;
-  }
-
-  .login-button .btn-text {
-    display: none;
   }
 
   .hadith-summary {

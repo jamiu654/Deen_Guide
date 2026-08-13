@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import apiClient from "../apiClient";
+import { playPageTurnSound } from "../bookPageSound";
 const SURAH_LANGUAGES = [
   { value: "en.sahih", label: "English (Sahih International)" },
   { value: "ar.quran-uthmani", label: "Arabic (Uthmani)" },
@@ -64,6 +65,10 @@ export default function QuranReader() {
   const [secondaryTexts, setSecondaryTexts] = useState({});
   const [showSurahList, setShowSurahList] = useState(true);
   const scrollTimeoutRef = useRef(null);
+  const [bookMode, setBookMode] = useState(
+    () => localStorage.getItem("deenQuranBookMode") === "true",
+  );
+  const touchStartRef = useRef(0);
 
   // Lightweight reciter mapping compatible with the legacy `main/index.js` implementation
   const RECITERS = {
@@ -111,6 +116,12 @@ export default function QuranReader() {
     } catch {}
   }, [arabicFont]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem("deenQuranBookMode", bookMode);
+    } catch {}
+  }, [bookMode]);
+
   function formatTime(seconds) {
     if (!seconds || Number.isNaN(seconds)) return "0:00";
     const mins = Math.floor(seconds / 60);
@@ -157,6 +168,39 @@ export default function QuranReader() {
   function handleRateChange(value) {
     setAudioRate(value);
     if (audioRef.current) audioRef.current.playbackRate = value;
+  }
+
+  function goToNextSurah() {
+    const currentNum = Number(selectedSurah);
+    if (currentNum < 114) {
+      setSelectedSurah(String(currentNum + 1));
+      if (bookMode) playPageTurnSound();
+    }
+  }
+
+  function goToPrevSurah() {
+    const currentNum = Number(selectedSurah);
+    if (currentNum > 1) {
+      setSelectedSurah(String(currentNum - 1));
+      if (bookMode) playPageTurnSound();
+    }
+  }
+
+  function handleTouchStart(e) {
+    if (bookMode) touchStartRef.current = e.touches[0].clientX;
+  }
+
+  function handleTouchEnd(e) {
+    if (!bookMode) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStartRef.current - touchEnd;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        goToNextSurah();
+      } else {
+        goToPrevSurah();
+      }
+    }
   }
 
   // HEAD check with timeout to quickly validate remote full-surah MP3 availability
@@ -897,6 +941,19 @@ export default function QuranReader() {
                 </option>
               ))}
             </select>
+            <button
+              type="button"
+              className={bookMode ? "active" : ""}
+              onClick={() => setBookMode(!bookMode)}
+              title="Toggle book page mode with page-turn sound"
+              style={{
+                backgroundColor: bookMode
+                  ? "rgba(10, 184, 129, 0.2)"
+                  : "transparent",
+              }}
+            >
+              📖 Book Mode
+            </button>
             <div className="quran-action-buttons">
               <button
                 type="button"
@@ -1046,7 +1103,12 @@ export default function QuranReader() {
               {verses.length} verses loaded from the Quran API.
             </p>
           </div>
-          <div className="verse-list">
+          <div
+            className="verse-list"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            style={bookMode ? { touchAction: "pan-y" } : {}}
+          >
             {verses.map((verse) => (
               <article
                 key={verse.numberInSurah}
@@ -1090,6 +1152,38 @@ export default function QuranReader() {
               </article>
             ))}
           </div>
+          {bookMode && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 12,
+                marginTop: 16,
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                type="button"
+                disabled={Number(selectedSurah) <= 1}
+                onClick={goToPrevSurah}
+              >
+                ◀ Previous Surah
+              </button>
+              <span
+                style={{ color: "var(--white-muted)", alignSelf: "center" }}
+              >
+                Surah {selectedSurah} of 114 📖
+              </span>
+              <button
+                type="button"
+                disabled={Number(selectedSurah) >= 114}
+                onClick={goToNextSurah}
+              >
+                Next Surah ▶
+              </button>
+            </div>
+          )}
         </div>
       )}
     </section>

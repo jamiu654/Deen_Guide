@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { getSavedBookmarks, saveBookmarks } from "../bookmarkStorage";
 import apiClient from "../apiClient";
+import { playPageTurnSound } from "../bookPageSound";
 const HADITH_COLLECTIONS = [
   { key: "bukhari", label: "Sahih al-Bukhari" },
   { key: "muslim", label: "Sahih Muslim" },
@@ -46,6 +47,10 @@ export default function Hadith() {
   const [selectedHadith, setSelectedHadith] = useState(null);
   const [bookmarks, setBookmarksState] = useState(getSavedBookmarks());
   const [searchTerm, setSearchTerm] = useState("");
+  const [bookMode, setBookMode] = useState(
+    () => localStorage.getItem("deenHadithBookMode") === "true",
+  );
+  const touchStartRef = useRef(0);
 
   const currentCollection = useMemo(
     () => `${language}-${collectionKey}`,
@@ -87,9 +92,42 @@ export default function Hadith() {
     [filteredHadiths, page],
   );
 
+  const searchTerms = (searchTerm || "")
+    .split(/\s+/)
+    .map((t) => normalizeForSearch(t))
+    .filter(Boolean);
+
+  function escapeHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function highlightPreview(text) {
+    if (!searchTerms.length) return escapeHtml(text);
+    const parts = String(text).split(/(\s+)/);
+    return parts
+      .map((token) => {
+        if (!token.trim()) return escapeHtml(token);
+        const normalized = normalizeForSearch(token);
+        const matched = searchTerms.some((term) => normalized.includes(term));
+        return matched
+          ? `<mark class="hadith-highlight">${escapeHtml(token)}</mark>`
+          : escapeHtml(token);
+      })
+      .join("");
+  }
+
   useEffect(() => {
     localStorage.setItem("deenHadithLanguage", language);
   }, [language]);
+
+  useEffect(() => {
+    localStorage.setItem("deenHadithBookMode", bookMode);
+  }, [bookMode]);
 
   const loadHadithCollection = useCallback(
     async (collection) => {
@@ -167,9 +205,51 @@ export default function Hadith() {
     setSelectedHadith(null);
   }
 
+  function goToNextPage() {
+    if (page < pageCount) {
+      setPage((p) => p + 1);
+      if (bookMode) playPageTurnSound();
+    }
+  }
+
+  function goToPrevPage() {
+    if (page > 1) {
+      setPage((p) => p - 1);
+      if (bookMode) playPageTurnSound();
+    }
+  }
+
+  function handleTouchStart(e) {
+    if (bookMode) touchStartRef.current = e.touches[0].clientX;
+  }
+
+  function handleTouchEnd(e) {
+    if (!bookMode) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStartRef.current - touchEnd;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        goToNextPage();
+      } else {
+        goToPrevPage();
+      }
+    }
+  }
+
   return (
     <section className="page card glass" id="hadith">
       <div className="section-box glass">
+        <style>{`
+            .hadith-search-input{ width:100%; padding:10px 12px; border-radius:8px; border:1px solid rgba(148,163,184,0.08); background:rgba(255,255,255,0.02); color:inherit }
+            .hadith-highlight{ background: rgba(250, 204, 21, 0.16); padding: 0 2px; border-radius: 3px }
+            .clear-search{ background: transparent; border: 1px solid rgba(148,163,184,0.08); color: inherit; padding:6px 10px; border-radius:8px }
+            @media (max-width:640px){
+              .section-box > .settings-card{ padding:12px }
+              .hadith-search-input{ font-size:1.05rem; padding:14px 14px }
+              .section-box{ padding:12px }
+              .clear-search{ padding:8px 10px; min-width:40px }
+            }
+          `}</style>
         <div
           style={{
             marginBottom: 22,
@@ -193,7 +273,14 @@ export default function Hadith() {
               full hadith details for study.
             </p>
           </div>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
             <button
               type="button"
               className={language === "eng" ? "active" : ""}
@@ -207,6 +294,20 @@ export default function Hadith() {
               onClick={() => setLanguage("ara")}
             >
               Arabic
+            </button>
+            <button
+              type="button"
+              className={bookMode ? "active" : ""}
+              onClick={() => setBookMode(!bookMode)}
+              title="Toggle book page mode with page-turn sound"
+              style={{
+                marginLeft: "auto",
+                backgroundColor: bookMode
+                  ? "rgba(10, 184, 129, 0.2)"
+                  : "transparent",
+              }}
+            >
+              📖 Book Mode
             </button>
           </div>
         </div>
@@ -243,14 +344,28 @@ export default function Hadith() {
           </div>
           <div className="settings-card glass" style={{ padding: 18 }}>
             <h3 style={{ marginBottom: 12 }}>Search Hadith</h3>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search by keyword, narrator, or grade"
-              aria-label="Search hadith"
-              style={{ width: "100%" }}
-            />
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                className="hadith-search-input"
+                type="text"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search by keyword, narrator, or grade"
+                aria-label="Search hadith"
+                style={{ flex: 1 }}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="clear-search"
+                  onClick={() => setSearchTerm("")}
+                  aria-label="Clear search"
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
             {searchTerm && (
               <p style={{ marginTop: 10, color: "var(--white-muted)" }}>
                 Showing {filteredHadiths.length} result
@@ -329,11 +444,24 @@ export default function Hadith() {
               <>
                 <div
                   className="hadith-grid"
-                  style={{
-                    display: "grid",
-                    gap: 16,
-                    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                  }}
+                  style={
+                    bookMode
+                      ? {
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 16,
+                          minHeight: "60vh",
+                          touchAction: "pan-y",
+                        }
+                      : {
+                          display: "grid",
+                          gap: 16,
+                          gridTemplateColumns:
+                            "repeat(auto-fit, minmax(280px, 1fr))",
+                        }
+                  }
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
                 >
                   {pagedHadiths.map((hadith, index) => {
                     const id =
@@ -393,7 +521,11 @@ export default function Hadith() {
                             lineHeight: 1.7,
                           }}
                         >
-                          {shortText}
+                          <span
+                            dangerouslySetInnerHTML={{
+                              __html: highlightPreview(shortText),
+                            }}
+                          />
                         </p>
                         {grade ? (
                           <div
@@ -436,25 +568,21 @@ export default function Hadith() {
                   <button
                     type="button"
                     disabled={page <= 1}
-                    onClick={() =>
-                      setPage((current) => Math.max(1, current - 1))
-                    }
+                    onClick={goToPrevPage}
                   >
-                    Previous
+                    {bookMode ? "◀ Previous" : "Previous"}
                   </button>
                   <span
                     style={{ color: "var(--white-muted)", alignSelf: "center" }}
                   >
-                    Page {page} of {pageCount || 1}
+                    Page {page} of {pageCount || 1} {bookMode && "📖"}
                   </span>
                   <button
                     type="button"
                     disabled={page >= pageCount}
-                    onClick={() =>
-                      setPage((current) => Math.min(pageCount, current + 1))
-                    }
+                    onClick={goToNextPage}
                   >
-                    Next
+                    {bookMode ? "Next ▶" : "Next"}
                   </button>
                 </div>
               </>
