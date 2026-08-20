@@ -10,12 +10,6 @@ import { RAMADAN_QUESTION_BANK } from "../data/ramadanQuestionBank";
 import { SALAH_QUESTION_BANK } from "../data/salahQuestionBank";
 import { SEERAH_QUESTION_BANK } from "../data/seerahQuestionBank";
 
-const LEVEL_DIFFICULTIES = {
-  1: ["easy"],
-  2: ["easy", "medium"],
-  3: ["easy", "medium", "hard"],
-};
-
 const BASE_QUESTIONS = [
   {
     category: "ramadan",
@@ -247,6 +241,33 @@ export default function Quiz() {
   const question = sessionQuestions[index] || null;
   const totalQuestions = sessionQuestions.length;
 
+  const playSound = useCallback(
+    (tone) => {
+      if (!soundEnabled || typeof window === "undefined") return;
+
+      const AudioCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtor) return;
+
+      const context = audioContextRef.current || new AudioCtor();
+      audioContextRef.current = context;
+
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+
+      const now = context.currentTime;
+      oscillator.type = tone === "correct" ? "triangle" : "sawtooth";
+      oscillator.frequency.setValueAtTime(tone === "correct" ? 660 : 180, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+      oscillator.start(now);
+      oscillator.stop(now + 0.3);
+    },
+    [soundEnabled],
+  );
+
   useEffect(() => {
     localStorage.setItem("quizBest", String(best));
   }, [best]);
@@ -287,34 +308,7 @@ export default function Quiz() {
     }, 1000);
 
     return () => window.clearTimeout(timer);
-  }, [started, question, selected, timeLeft, soundEnabled]);
-
-  const playSound = useCallback(
-    (tone) => {
-      if (!soundEnabled || typeof window === "undefined") return;
-
-      const AudioCtor = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtor) return;
-
-      const context = audioContextRef.current || new AudioCtor();
-      audioContextRef.current = context;
-
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-
-      const now = context.currentTime;
-      oscillator.type = tone === "correct" ? "triangle" : "sawtooth";
-      oscillator.frequency.setValueAtTime(tone === "correct" ? 660 : 180, now);
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
-      oscillator.start(now);
-      oscillator.stop(now + 0.3);
-    },
-    [soundEnabled],
-  );
+  }, [started, question, selected, timeLeft, soundEnabled, playSound]);
 
   const saveLeaderboardEntry = useCallback(
     (finalScore) => {

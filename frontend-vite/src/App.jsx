@@ -14,6 +14,10 @@ import Contact from "./components/Contact";
 import Auth from "./components/Auth";
 import Profile from "./components/Profile";
 import apiClient from "./apiClient";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { CurriculumProvider } from "./context/CurriculumContent";
+import LearnHome from "./pages/LearnHome";
+import LessonScreen from "./pages/LessonScreen";
 
 const topLinks = [
   { key: "dashboard", label: "Home" },
@@ -23,7 +27,8 @@ const topLinks = [
   { key: "contact", label: "Contact" },
 ];
 
-function App() {
+function AppShell() {
+  const navigate = useNavigate();
   const [view, setView] = useState("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -83,6 +88,12 @@ function App() {
   }, []);
 
   const handleNavigate = (nextView) => {
+    if (nextView === "learn") {
+      navigate("/learn");
+      setMenuOpen(false);
+      setSidebarOpen(false);
+      return;
+    }
     setView(nextView);
     setMenuOpen(false);
     setSidebarOpen(false);
@@ -409,4 +420,17 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <CurriculumProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/learn" element={<LearnHome />} />
+          <Route path="/learn/module/:moduleId" element={<LessonScreen />} />
+          <Route path="/learn/lesson/:lessonId" element={<LessonScreen />} />
+          <Route path="*" element={<AppShell />} />
+        </Routes>
+      </BrowserRouter>
+    </CurriculumProvider>
+  );
+}

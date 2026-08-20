@@ -68,8 +68,6 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    let active = true;
-
     async function loadDailyHadith() {
       try {
         const data = await apiClient.fetchJson(
@@ -107,9 +105,6 @@ export default function Dashboard() {
     }
 
     void loadDailyHadith();
-    return () => {
-      active = false;
-    };
   }, []);
 
   useEffect(() => {

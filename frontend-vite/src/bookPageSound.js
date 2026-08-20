@@ -62,7 +62,7 @@ export function initAudioContext() {
         audioContext.resume();
       });
     }
-  } catch (error) {
+  } catch {
     // Web Audio API not available
   }
 }

@@ -2,6 +2,7 @@ import "./Sidebar.css";
 
 const links = [
   { key: "dashboard", label: "Dashboard", icon: "🏠" },
+  { key: "learn", label: "Learn", icon: "📚" },
   { key: "profile", label: "Profile", icon: "👤" },
   { key: "quran", label: "Quran Reader", icon: "📖" },
   { key: "hadith", label: "Hadith Collection", icon: "📜" },

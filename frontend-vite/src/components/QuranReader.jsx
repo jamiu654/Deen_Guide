@@ -23,12 +23,32 @@ const ARABIC_FONT_OPTIONS = [
   { value: "aref-ruqaa", label: "Aref Ruqaa", family: "'Aref Ruqaa', serif" },
 ];
 
-const SECONDARY_LANGUAGE_OPTIONS = [
-  { value: "", label: "None" },
-  { value: "en.sahih", label: "English (Sahih International)" },
-  { value: "ur.ahmedali", label: "Urdu (Ahmed Ali)" },
-  { value: "en.transliteration", label: "Transliteration" },
-];
+const RECITERS = {
+  1: {
+    code: "afs",
+    name: "Mishary Al-Afasy",
+    server: "server8",
+    cdn: "ar.alafasy",
+  },
+  2: {
+    code: "shatri",
+    name: "Abu Bakr Al-Shatri",
+    server: "server11",
+    cdn: "ar.shatri",
+  },
+  3: {
+    code: "qtm",
+    name: "Nasser Al-Qatami",
+    server: "server6",
+    cdn: "ar.qtm",
+  },
+  4: {
+    code: "yasser",
+    name: "Yasser Al-Dosari",
+    server: "server11",
+    cdn: "ar.yasser",
+  },
+};
 
 export default function QuranReader() {
   const [surahList, setSurahList] = useState([]);
@@ -69,34 +89,6 @@ export default function QuranReader() {
     () => localStorage.getItem("deenQuranBookMode") === "true",
   );
   const touchStartRef = useRef(0);
-
-  // Lightweight reciter mapping compatible with the legacy `main/index.js` implementation
-  const RECITERS = {
-    1: {
-      code: "afs",
-      name: "Mishary Al-Afasy",
-      server: "server8",
-      cdn: "ar.alafasy",
-    },
-    2: {
-      code: "shatri",
-      name: "Abu Bakr Al-Shatri",
-      server: "server11",
-      cdn: "ar.shatri",
-    },
-    3: {
-      code: "qtm",
-      name: "Nasser Al-Qatami",
-      server: "server6",
-      cdn: "ar.qtm",
-    },
-    4: {
-      code: "yasser",
-      name: "Yasser Al-Dosari",
-      server: "server11",
-      cdn: "ar.yasser",
-    },
-  };
 
   const [reciterId, setReciterId] = useState(
     Number(localStorage.getItem("deenQuranReciterId") || "1"),
@@ -441,7 +433,7 @@ export default function QuranReader() {
               text: v.text || v,
             })),
           };
-      } catch (e) {
+      } catch {
         // try next url
         continue;
       }
@@ -540,11 +532,6 @@ export default function QuranReader() {
     } catch {}
     setIsPlayingRemote(false);
     setCurrentAudioUrl("");
-  }
-
-  function goToLastRead() {
-    if (!lastRead) return;
-    setSelectedSurah(String(lastRead));
   }
 
   function getCurrentVerseIndex() {
@@ -677,7 +664,7 @@ export default function QuranReader() {
         };
         return;
       }
-    } catch (e) {
+    } catch {
       // proceed to per-verse fallback
     }
 

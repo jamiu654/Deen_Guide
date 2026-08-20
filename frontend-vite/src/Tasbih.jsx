@@ -22,7 +22,6 @@ function generateBeads(count, limit) {
 
   for (let i = 0; i < beadsToShow; i++) {
     const beadIndex = startIndex + i;
-    const isCountedInThisCycle = beadIndex < cyclePos;
     const isSeparator = (beadIndex + 1) % 10 === 0;
 
     beads.push({

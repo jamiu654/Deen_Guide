@@ -1,0 +1,140 @@
+{
+  "levels": [
+    {
+      "id": "level-1",
+      "order": 1,
+      "title": "The Beginner Foundation",
+      "emoji": "🟢",
+      "rankUnlocked": "Arabic Reading Beginner",
+      "phase": 1,
+      "modules": [
+        {
+          "id": "l1-m1",
+          "title": "Meet the Arabic Letters",
+          "type": "letters",
+          "lessons": [
+            {
+              "id": "l1-m1-alif",
+              "title": "Alif",
+              "arabic": "ا",
+              "forms": ["ا", "ـا"],
+              "audioUrl": "/audio/letters/alif.mp3",
+              "xp": 10,
+              "quiz": [
+                {
+                  "id": "q1",
+                  "prompt": "Which shape is Alif at the end of a word?",
+                  "options": ["ا", "بـ", "ـبـ"],
+                  "answer": "ا"
+                }
+              ]
+            },
+            {
+              "id": "l1-m1-ba",
+              "title": "Bā",
+              "arabic": "ب",
+              "forms": ["بـ", "ـبـ", "ـب", "ب"],
+              "audioUrl": "/audio/letters/ba.mp3",
+              "xp": 10,
+              "quiz": [
+                {
+                  "id": "q1",
+                  "prompt": "Which shape is Bā in the middle of a word?",
+                  "options": ["بـ", "ـبـ", "ـب"],
+                  "answer": "ـبـ"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "l1-m2",
+          "title": "How Arabic Letters Change Shape",
+          "type": "concept",
+          "lessons": []
+        },
+        {
+          "id": "l1-m3",
+          "title": "The Short Vowels",
+          "type": "vowels",
+          "lessons": []
+        },
+        {
+          "id": "l1-m4",
+          "title": "Tanween",
+          "type": "vowels",
+          "lessons": []
+        },
+        {
+          "id": "l1-m5",
+          "title": "Sukoon",
+          "type": "vowels",
+          "lessons": []
+        },
+        {
+          "id": "l1-m6",
+          "title": "Shaddah",
+          "type": "vowels",
+          "lessons": []
+        },
+        {
+          "id": "l1-m7",
+          "title": "Long Vowels / Madd",
+          "type": "vowels",
+          "lessons": []
+        },
+        {
+          "id": "l1-m8",
+          "title": "Combining Everything",
+          "type": "words",
+          "lessons": []
+        }
+      ]
+    },
+    {
+      "id": "level-2",
+      "order": 2,
+      "title": "Quran Reading",
+      "emoji": "🟢",
+      "rankUnlocked": "Quran Reader",
+      "phase": 1,
+      "modules": []
+    },
+    {
+      "id": "level-3",
+      "order": 3,
+      "title": "Understanding the Quran",
+      "emoji": "🟡",
+      "rankUnlocked": null,
+      "phase": 3,
+      "modules": []
+    },
+    {
+      "id": "level-4",
+      "order": 4,
+      "title": "Salah & Daily Muslim Practice",
+      "emoji": "🟡",
+      "rankUnlocked": null,
+      "phase": 2,
+      "modules": []
+    },
+    {
+      "id": "level-5",
+      "order": 5,
+      "title": "Adhkar & Tasbih",
+      "emoji": "🟠",
+      "rankUnlocked": null,
+      "phase": 2,
+      "modules": []
+    },
+    {
+      "id": "level-6",
+      "order": 6,
+      "title": "Hadith",
+      "emoji": "🟠",
+      "rankUnlocked": null,
+      "phase": 4,
+      "modules": []
+    }
+  ]
+}
